@@ -1,5 +1,5 @@
 --am/turtle/branch.lua
-local version = "2.000"
+local version = "2.001"
 
 local args = { ... }
 
@@ -121,7 +121,8 @@ end
 
 local function checkTorches()
 	while (turtle.getItemCount(torchSlot) == nil) or (turtle.getItemCount(torchSlot) == 0) or (turtle.getItemCount(torchSlot) < math.floor(lengthOfBranches/distanceBetweenTorches)) do
-		print("WARNING: Not enough torches! Put more torches in " .. amCore.intString(torchSlot) .. " and press ENTER")
+		print("WARNING: Not enough torches! Put more torches in 
+" .. core.intString(torchSlot) .. " and press ENTER")
 		repeat
 	    	event, param1 = os.pullEvent ("key")
 	    until param1 == 28
@@ -134,7 +135,7 @@ local function checkFuel()
 		turtle.refuel()
 	end
 	if (turtle.getFuelLevel() < fuelSafeLevels[1]) then
-		print("Need more fuel (" .. amCore.intString(turtle.getFuelLevel()) .. "). Returning...")
+		print("Need more fuel (" .. core.intString(turtle.getFuelLevel()) .. "). Returning...")
 		local oldPosition = { position[1], position[2] }
 		local oldFacing = facing
 		goTo(chestPosition[1], chestPosition[2])
@@ -155,7 +156,7 @@ local function checkFuel()
 			end
 			turtle.refuel()
 		end
-		print("New fuel level: " .. amCore.intString(turtle.getFuelLevel()))
+		print("New fuel level: " .. core.intString(turtle.getFuelLevel()))
 
 		print("Returning to old position...")
 		goTo(oldPosition[1], oldPosition[2])
