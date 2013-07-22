@@ -1,5 +1,5 @@
 --am/turtle/branch.lua
-local version = "2.001"
+local version = "2.002"
 
 local args = { ... }
 
@@ -121,8 +121,7 @@ end
 
 local function checkTorches()
 	while (turtle.getItemCount(torchSlot) == nil) or (turtle.getItemCount(torchSlot) == 0) or (turtle.getItemCount(torchSlot) < math.floor(lengthOfBranches/distanceBetweenTorches)) do
-		print("WARNING: Not enough torches! Put more torches in 
-" .. core.intString(torchSlot) .. " and press ENTER")
+		print("WARNING: Not enough torches! Put more torches in " .. core.intString(torchSlot) .. " and press ENTER")
 		repeat
 	    	event, param1 = os.pullEvent ("key")
 	    until param1 == 28
