@@ -1,5 +1,5 @@
 --am/turtle/startup.lua
-local version = "0.200"
+version = "0.201"
 
-os.loadAPI("/am//core/core")
+os.loadAPI("/am/core/core")
 shell.setPath(shell.path() .. ":/am/programs")

@@ -1,5 +1,5 @@
 --am/programs/pdetector.lua
-local version = "1.000"
+version = "1.001"
 
 if not fs.exists("/ocs") then
     error("OpenCCSensors not installed.")

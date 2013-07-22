@@ -1,5 +1,5 @@
 --am/core/layer.lua
-local version = "1.001"
+version = "1.001"
 
 --branch from Kaos' Layer API: http://pastebin.com/ZPqJFjDy
 bWritten=true

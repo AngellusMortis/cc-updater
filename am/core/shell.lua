@@ -1,5 +1,5 @@
 --am/core/shell.lua
-local version = "0.815"
+version = "0.816"
 
 local parentShell = shell
 

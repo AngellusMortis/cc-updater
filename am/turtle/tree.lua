@@ -1,2 +1,2 @@
 --am/turtle/tree.lua
-local version = "0.000"
+version = "0.001"

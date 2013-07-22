@@ -1,5 +1,5 @@
 --startup.lua
-local version = "1.540"
+version = "1.541"
 
 local path = "/"
 if fs.exists("/disk/am") then

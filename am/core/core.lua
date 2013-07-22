@@ -1,5 +1,5 @@
 --am/core/core.lua
-local version = "3.021"
+version = "3.022"
 
 url = "http://tundrasofangmar.net/static/cc/"
 

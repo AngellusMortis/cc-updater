@@ -1,5 +1,5 @@
 --amShell/am/turtle/place.lua
-local version = "1.110"
+version = "1.111"
 
 local args = { ... }
 

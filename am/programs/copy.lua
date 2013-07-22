@@ -1,5 +1,5 @@
 --am/programs/copy.lua
-local version = "1.000"
+version = "1.001"
 
 local args = { ... }
 

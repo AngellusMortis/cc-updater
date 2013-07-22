@@ -1,5 +1,5 @@
 --am/programs/update.lua
-local version = "4.136"
+version = "4.137"
 
 local args = { ... }
 local updateSelf = false

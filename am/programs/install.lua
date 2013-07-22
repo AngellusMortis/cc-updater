@@ -1,5 +1,5 @@
 --am/programs/install.lua
-local version = "1.123"
+version = "1.124"
 
 local url = nil
 if core == nil then

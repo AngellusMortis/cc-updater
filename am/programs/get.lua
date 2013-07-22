@@ -1,5 +1,5 @@
 --am/programs/get.lua
-local version = "1.020"
+version = "1.021"
 
 local args = { ... }
 local function main()
