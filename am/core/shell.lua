@@ -506,6 +506,7 @@ local function main()
 	shell.setAlias( "cp", "copy" )
 	shell.setAlias( "mv", "move" )
 	shell.setAlias( "rm", "delete" )
+        shell.setAlias( "nano", "edit" )
 
 	------------------------------ Initalize Shell -----------------------------------
 	os.version = shell.getVersion

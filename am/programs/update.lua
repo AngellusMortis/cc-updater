@@ -30,7 +30,7 @@ local function getFiles(filters)
 	end
 
 	if (tonumber(table.getn(filters)) == 0) then
-		fileList = core.getFileList("amShell")
+		fileList = core.getFileList("")
 	end
 
 	for x, cPath in pairs(paths) do
