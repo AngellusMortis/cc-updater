@@ -1,5 +1,5 @@
 --am/core/core.lua
-local version = "3.020"
+local version = "3.021"
 
 url = "http://tundrasofangmar.net/static/cc/"
 
@@ -187,7 +187,8 @@ end
 
 function getFileList(path)
     math.randomseed(os.time() * 1024 % 46)
-	local response = http.get(url .. path .."/?random=" .. math.random(1, 1000000))
+	local response = http.get(url .. path .."/index.php?random=" .. 
+math.random(1, 1000000))
 	local files = {}
 	local line = response.readLine()
 	while line ~= nil do

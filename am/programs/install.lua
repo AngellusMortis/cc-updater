@@ -1,5 +1,5 @@
 --am/programs/install.lua
-local version = "1.122"
+local version = "1.123"
 
 local url = nil
 if core == nil then
@@ -23,7 +23,7 @@ if core == nil then
 end
 
 local urlPath = ""
-local files = core.getFileList(urlPath)
+local files = core.getFileList(urlPath .. "index.php")
 
 
 local function header()
