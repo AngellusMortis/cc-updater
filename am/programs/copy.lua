@@ -1,4 +1,4 @@
---amShell/am/programs/copy.lua
+--am/programs/copy.lua
 local version = "1.000"
 
 local args = { ... }

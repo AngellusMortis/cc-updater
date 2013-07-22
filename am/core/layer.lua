@@ -1,4 +1,4 @@
---amShell/am/core/layer.lua
+--am/core/layer.lua
 local version = "1.001"
 
 --branch from Kaos' Layer API: http://pastebin.com/ZPqJFjDy

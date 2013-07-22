@@ -1,4 +1,4 @@
---amShell/am/turtle/dig.lua
+--am/turtle/dig.lua
 local version = "1.101"
 
 local args = { ... }

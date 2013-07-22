@@ -1,4 +1,4 @@
---amShell/startup.lua
+--startup.lua
 local version = "1.540"
 
 local path = "/"

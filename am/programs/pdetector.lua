@@ -1,4 +1,4 @@
---amShell/am/programs/pdetector.lua
+--am/programs/pdetector.lua
 local version = "1.000"
 
 if not fs.exists("/ocs") then

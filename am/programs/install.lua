@@ -1,10 +1,10 @@
---amShell/am/programs/install.lua
+--am/programs/install.lua
 local version = "1.122"
 
 local url = nil
 if core == nil then
     core = {}
-    url = "http://tundrasofangmar.net/"
+    url = "http://tundrasofangmar.net/static/cc/"
     core.getFileList = function(path)
     	local response = http.get(url .. path)
     	local files = {}
@@ -22,7 +22,7 @@ if core == nil then
     end
 end
 
-local urlPath = "amShell/"
+local urlPath = ""
 local files = core.getFileList(urlPath)
 
 

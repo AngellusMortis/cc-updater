@@ -1,4 +1,4 @@
---amShell/am/programs/update.lua
+--am/programs/update.lua
 local version = "4.135"
 
 local args = { ... }
@@ -130,7 +130,7 @@ function main()
 	for x, item in pairs(new) do
 		core.cPrint("&5New file found: &4" .. item[1] .. item[2])
 		core.cWrite("&6Downloading...")
-		local response = http.get(core.url .. "amShell/" .. item[1] .. item[2] .. ".lua")
+		local response = http.get(core.url .. "" .. item[1] .. item[2] .. ".lua")
 		if response ~= nil then
 			local handle = fs.open(path .. item[1] .. item[2], "w")
 			handle.write(response.readAll())

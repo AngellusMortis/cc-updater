@@ -1,7 +1,7 @@
---amShell/am/core/core.lua
+--am/core/core.lua
 local version = "3.020"
 
-url = "http://tundrasofangmar.net/"
+url = "http://tundrasofangmar.net/static/cc/"
 
 function max(tPar) --find the highest numeric index
   local count=0

@@ -1,4 +1,4 @@
---amShell/am/programs/get.lua
+--am/programs/get.lua
 local version = "1.020"
 
 local args = { ... }
@@ -9,7 +9,7 @@ local function main()
 	else
 		local down = args[1]
 		local file = args[2] or (shell.dir() .. "/" .. down)
-		local url = args[3] or (core.url .. "amShell/")
+		local url = args[3] or (core.url .. "")
 
 		down = shell.dir():gsub("disk/", "") .. "/" .. down
 		term.write("Downloading...")

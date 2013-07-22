@@ -1,4 +1,4 @@
---amShell/am/turtle/startup.lua
+--am/turtle/startup.lua
 local version = "0.200"
 
 os.loadAPI("/am//core/core")
