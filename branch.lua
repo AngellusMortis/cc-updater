@@ -647,7 +647,7 @@ for i=1,16 do
     set_task("Emptying", string.format("%3d%%", (i/16)*100))
     turtle.select(i)
     if (i == torch_slot) or (i == chest_slot) then
-        elseif (i == test_slot[1]) or (i == test_slot[2]) or (i == test_slot[3]) or (i == test_slot[4]) then
+        elseif (i == test_slots[1]) or (i == test_slots[2]) or (i == test_slots[3]) or (i == test_slots[4]) then
             to_drop = turtle.getItemCount(i)-1
             turtle.dropUp(to_drop)
         else
