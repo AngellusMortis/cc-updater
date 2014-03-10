@@ -1,7 +1,7 @@
 --[[
 
 ##file: am/turtle/branch.lua
-##version: 1.0.0
+##version: 1.0.1
 
 ##type: turtle
 ##desc: Mines a branch mine with a trunk and 5 branches each divded into two 50 length halves.
