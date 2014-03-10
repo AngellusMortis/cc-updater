@@ -175,41 +175,50 @@ local function wait_for_enter()
         end
 -- prints error on second to last line and then waits for ENTER
 --  if fatal is set to true, terminates program instead with error message
-local function print_error(error, fatal)
+local function print_error(error, fatal, wait)
     fatal = fatal or false
+    wait = wait or true
 
--- if turtle and transmit is on, send to reciever
-if (not (turtle == nil)) and (transmit_progress) then
-    data = {}
-    data["type"] = "error"
-    data["id"] = os.computerID()
-    data["error"] = error
-    transmitter.transmit(transmit_channel, receive_channel, textutils.serialize(data))
-end
+    -- if turtle and transmit is on, send to reciever
+    if (not (turtle == nil)) and (transmit_progress) then
+        data = {}
+        data["type"] = "error"
+        data["id"] = os.computerID()
+        data["error"] = error
+        transmitter.transmit(transmit_channel, receive_channel, textutils.serialize(data))
+    end
 
--- if fatal, terminate
-if (fatal) then
-    error(error)
-else
-    term_size = {term.getSize()}
-    term.setCursorPos(1, (term_size[2]-2))
-    clear_line()
-    color_write("ERROR: "..error, colors.red)
--- if turtle, wait for user to press ENTER
-if not (turtle == nil) then
-    wait_for_enter()
-    term.setCursorPos(1, (term_size[2]-2))
-    clear_line()
-    data = {}
--- if transmit, tell reciever error has been cleared
-if (transmit_progress) then
-    data["type"] = "error"
-    data["id"] = os.computerID()
-    data["error"] = message_error_clear
-    transmitter.transmit(transmit_channel, receive_channel, textutils.serialize(data))
-end
-end
-end  
+    -- if fatal, terminate
+    if (fatal) then
+        error(error)
+    else
+        term_size = {term.getSize()}
+        term.setCursorPos(1, (term_size[2]-2))
+        clear_line()
+        color_write("ERROR: "..error, colors.red)
+        -- if turtle, wait for user to press ENTER
+        if not (turtle == nil) then
+            if (wait) then
+                wait_for_enter()
+                term.setCursorPos(1, (term_size[2]-2))
+                clear_line()
+            end
+            data = {}
+            -- if transmit, tell reciever error has been cleared
+            if (transmit_progress) then
+                data["type"] = "error"
+                data["id"] = os.computerID()
+                data["error"] = message_error_clear
+                transmitter.transmit(transmit_channel, receive_channel, textutils.serialize(data))
+            end
+        else
+            if (wait) then
+                wait_for_enter()
+                term.setCursorPos(1, (term_size[2]-2))
+                clear_line()
+            end
+        end
+    end  
 end
 -- writes current progress to progress file
 local function write_progress()
@@ -794,26 +803,26 @@ local function run_reciever_main()
 
 -- check for transmitter
 while (transmitter == nil) do
--- if transmitter_side is not nil, for check on that side
-if not (transmitter_side == nil) then
-    transmitter = peripheral.wrap(transmitter_side)
--- if no transmitter, print error to add one
-if (transmitter == nil) then
-    print_error(message_error_modem_side)
-end
-else
--- look for transmitter
-transmitter = peripheral.find("modem")
--- if no transmitter, print error to add one
-if (transmitter == nil) then
-    print_error(message_error_modem)
-end
-end
+    -- if transmitter_side is not nil, for check on that side
+    if not (transmitter_side == nil) then
+        transmitter = peripheral.wrap(transmitter_side)
+        -- if no transmitter, print error to add one
+        if (transmitter == nil) then
+            print_error(message_error_modem_side, false, true)
+        end
+    else
+        -- look for transmitter
+        transmitter = peripheral.find("modem")
+        -- if no transmitter, print error to add one
+        if (transmitter == nil) then
+            print_error(message_error_modem, false, true)
+        end
+    end
 end
 
 -- verify it is a wireless transmitter
 if not (transmitter.isWireless()) then
-    print_error(message_error_modem_wireless)
+    print_error(message_error_modem_wireless, false, true)
 end
 
 if (redirect_to_monitor) then
