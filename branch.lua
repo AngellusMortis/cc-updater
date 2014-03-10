@@ -62,25 +62,26 @@ Directions (T = turtle):
 
 
 ##parameters:
-args[1]: Use collected coal as fuel (default: false)
-args[2]: Number of branches
-args[3]: Number of blocks between each branch (default: 2)
-args[4]: Length of branch in blocks (default: 52)
-args[5]: distance between torches (default: 10)
-args[6]: Number of blocks between connections between branches (default: 26)
+args[1]: display to redreict to (side or name)
+args[2]: Use collected coal as fuel (default: false)
+args[3]: Number of branches
+args[4]: Number of blocks between each branch (default: 2)
+args[5]: Length of branch in blocks (default: 52)
+args[6]: distance between torches (default: 10)
+args[7]: Number of blocks between connections between branches (default: 26)
 
 --]]
 
 local args = { ... }
 
 -- global variables
-local use_coal = args[1] or false
+local use_coal = args[2] or false
 -- mine config
-local number_of_branches = args[2] or 5
-local branch_between_distance = args[3] or 2
-local branch_length = args[4] or 52
-local torch_distance = args[5] or 10
-local branch_connector_distance = args[6] or 26
+local number_of_branches = args[3] or 5
+local branch_between_distance = args[4] or 2
+local branch_length = args[5] or 52
+local torch_distance = args[6] or 10
+local branch_connector_distance = args[7] or 26
 local trunk_width = 2
 local trunk_height = 3
 
@@ -108,6 +109,11 @@ local transmitter_side = nil
     -- should not need to change these
 local transmit_channel = 60000
 local receive_channel = 60001
+
+-- attempt to redirect to monitor for reciever?
+    --  side monitor if perhiperal.find() is picking an undesired one (works with networked monitors)
+local redirect_to_monitor = true
+local monitor_side = args[1] or nil
 
 -- error messages
 local message_press_enter = "Press ENTER to continue..."
@@ -773,6 +779,8 @@ local function run_turtle_main()
 end
 
 local function run_reciever_main()
+    local term_object = term
+
     -- check for transmitter
     while (transmitter == nil) do
       -- if transmitter_side is not nil, for check on that side
@@ -795,6 +803,10 @@ local function run_reciever_main()
     -- verify it is a wireless transmitter
     if not (transmitter.isWireless()) then
       print_error(message_error_modem_wireless)
+    end
+
+    if (redirect_to_monitor) then
+        temp_monitor = peripheral.find("monitor")
     end
 
     -- open channel for listening
