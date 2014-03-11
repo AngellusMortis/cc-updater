@@ -1,7 +1,7 @@
 --[[
 
 ##file: am/turtle/branch.lua
-##version: 1.0.4
+##version: 1.0.5
 
 ##type: turtle
 ##desc: Mines a branch mine with a trunk and 5 branches each divded into two 50 length halves.
@@ -609,16 +609,11 @@ if (i%branch_connector_distance) == 0 then
 end
 
 -- verfiy blocks are in place for torches (placed later)
-if ((i%torch_distance) == 1) and (turtle.getItemCount(cobblestone_slot) > 2) then
-    rotate(0)
-    turtle.place()
+if (x == 1) and (i%torch_distance) == 1) and (turtle.getItemCount(cobblestone_slot) > 3) then
+    turtle.placeUp()
     rotate(2)
     turtle.place()
-    if (x == 1) then
-        rotate(3)
-    else 
-        rotate(1)
-    end
+    rotate(3)
 end
 end
 if (x == 1) then
