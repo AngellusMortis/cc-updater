@@ -1,7 +1,7 @@
 --[[
 
 ##file: am/turtle/branch.lua
-##version: 1.0.3
+##version: 1.0.4
 
 ##type: turtle
 ##desc: Mines a branch mine with a trunk and 5 branches each divded into two 50 length halves.
@@ -435,7 +435,7 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
     set_task("Supplies", "Checking")
 
 -- check fuel
-local previous_position = progress["position"]
+local previous_position = previous_position = {{progress["position"][1][1], progress["position"][1][2], progress["position"][1][3]}, progress["position"][2]}
 if (turtle.getFuelLevel() < required_fuel) then
     set_task("Supplies", "Fuel")
     goto_position({(trunk_width-1), 0, 0}, 1)
