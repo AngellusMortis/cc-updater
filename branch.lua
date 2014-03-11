@@ -103,7 +103,7 @@ local tick_delay = 2
 local transmit_progress = true
 -- variable to hold wireless modem
 local transmitter = nil
--- if you have multiple modems (wired and wireless), set this to force 
+-- if you have multiple modems (wired and wireless), set this to force
 --  side of modem if perhiperal.find() is picking the wired one
 local transmitter_side = nil
 -- should not need to change these
@@ -133,11 +133,11 @@ local progress = {}
 
 
 -- functions
--- Force clears the current terminal line and then 
+-- Force clears the current terminal line and then
 --  sets it to first positions (was having trouble with term.clearLine())
 local function init_progress()
     progress = {}
-    progress["task"] = nil 
+    progress["task"] = nil
     progress["position"] = {{0, 0, 0}, 2}
     progress["branch"] = {}
     progress["branch"]["current"] = 1
@@ -222,7 +222,7 @@ local function print_error(error, fatal, wait)
                 clear_line()
             end
         end
-    end  
+    end
 end
 -- writes current progress to progress file
 local function write_progress()
@@ -426,7 +426,7 @@ local function goto_position(coord, facing)
     rotate(facing)
 end
 -- calculate the distance from the fuel chest
-local function get_distance_from_fuel() 
+local function get_distance_from_fuel()
     -- fuel position is (trunk_width-1, 0, 0)
     return math.abs(progress["position"][1][1]-(trunk_width-1))+math.abs(progress["position"][1][2])+math.abs(progress["position"][1][3])
 end
@@ -513,7 +513,7 @@ local function dig_ores(do_down)
                 turtle.select(test_slots[i])
                 is_block[i] = turtle.compareUp()
             end
-            
+
             if not (is_block[1] or is_block[2] or is_block[3] or is_block[4]) then
                 turtle.digUp()
             end
@@ -581,7 +581,7 @@ local function dig_branch()
     for x=1,2 do
         if (x == 1) then
             rotate(3)
-        else 
+        else
             rotate(1)
         end
         -- place supply chest
@@ -610,7 +610,7 @@ local function dig_branch()
                 end
                 if (x == 1) then
                     rotate(3)
-                else 
+                else
                     rotate(1)
                 end
             end
@@ -625,7 +625,7 @@ local function dig_branch()
         end
         if (x == 1) then
             rotate(1)
-        else 
+        else
             rotate(3)
         end
         --mine out bottom level of branch (return)
@@ -693,7 +693,7 @@ local function run_turtle_main()
         end
     end
 
-    -- print title 
+    -- print title
     term_size = {term.getSize()}
     current_branch_location = {term_size[1]-9,3}
     term.clear()
@@ -703,7 +703,7 @@ local function run_turtle_main()
     if (transmit_progress) then
         term.setCursorPos(term_size[1]-4,1)
         color_write(string.format("%5d", os.computerID()), colors.red)
-    end 
+    end
 
     -- read progress from last attempt
     read_progress()
@@ -716,7 +716,7 @@ local function run_turtle_main()
             if (turtle.getFuelLevel() == 0) then
                 term.setCursorPos(1,4)
                 color_write("Put at least one piece of fuel in", colors.cyan)
-                wait_for_enter() 
+                wait_for_enter()
                 term.setCursorPos(1,4)
                 clear_line()
             end
@@ -729,7 +729,7 @@ local function run_turtle_main()
         color_write("Put stone, dirt, and gravel in slots ", colors.cyan)
         term.setCursorPos(4,6)
         color_write(test_slots[2]..", "..test_slots[3]..", and "..test_slots[4], colors.cyan)
-        wait_for_enter() 
+        wait_for_enter()
         term.setCursorPos(1,4)
         clear_line()
         term.setCursorPos(1,5)
@@ -862,12 +862,12 @@ local function run_reciever_main()
     color_write("Waiting for turtle...", colors.magenta)
 
     -- ID of turtle in which to listen for messages for
-    paired_id = nil 
+    paired_id = nil
 
     -- listen for events
     do_loop = true
     while (do_loop) do
-        local event, modemSide, senderChannel, 
+        local event, modemSide, senderChannel,
             replyChannel, message, senderDistance = os.pullEvent("modem_message")
 
         data = textutils.unserialize(message)
@@ -924,7 +924,7 @@ local function main()
     init_progress()
     if not (turtle == nil) then
         run_turtle_main()
-    else 
+    else
         run_reciever_main()
     end
 end
