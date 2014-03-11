@@ -1,7 +1,7 @@
 --[[
 
 ##file: am/turtle/branch.lua
-##version: 1.0.5
+##version: 1.1.0
 
 ##type: turtle
 ##desc: Mines a branch mine with a trunk and 5 branches each divded into two 50 length halves.
@@ -120,12 +120,15 @@ local message_press_enter = "Press ENTER to continue..."
 local message_error_clear = "__clear"
 local message_error_file = "File could not be opened"
 local message_error_move = "Cannot move"
+local message_error_dig = "Cannot dig"
 local message_error_fuel = "Out of fuel"
 local message_error_chest = "Out of chests"
 local message_error_torch = "Out of torches"
 local message_error_modem = "No modem connected"
 local message_error_modem_side = "No modem connected ("..tostring(transmitter_side)..")"
 local message_error_modem_wireless = "Modem cannot do wireless"
+local message_error_failed_to_place_chest = "Could not place chest"
+local message_error_failed_to_place_torch = "Could not place torch"
 
 -- settings for progress for resuming (not finished, do not touch)
 local progress_file = ".branch.progress"
@@ -328,6 +331,21 @@ local function force_forward()
         update_progress("position", progress["position"][1][1] - 1, 1, 1)
     end
 end
+-- force turtle to dig (keeps digging until no block)
+local function force_dig_forward()
+    count = 0
+    while (turtle.detect()) then
+        turtle.select(1)
+        turtle.attack()
+        turtle.dig()
+        count = count + 1
+        if (count > 10 and turtle.detect()) or (count > 50) then
+            print_error(message_error_dig)
+            count = 0
+        end
+        os.sleep(0.5 * tick_delay)
+    end
+end
 -- force the turtle to move up
 --  digs anything out of the way
 --  can generate error if unable to move after 10 tries
@@ -346,6 +364,20 @@ local function force_up()
     end
     update_progress("position", progress["position"][1][2] + 1, 1, 2)
 end
+-- force turtle to dig up (keeps digging until no block)
+local function force_dig_up()
+    count = 0
+    while (turtle.detectUp()) then
+        turtle.select(1)
+        turtle.digUp()
+        count = count + 1
+        if (count > 10) then
+            print_error(message_error_dig)
+            count = 0
+        end
+        os.sleep(0.5 * tick_delay)
+    end
+end
 -- force the turtle to move down
 --  digs anything out of the way
 --  can generate error if unable to move after 10 tries
@@ -363,6 +395,20 @@ local function force_down()
         os.sleep(0.5 * tick_delay)
     end
     update_progress("position", progress["position"][1][2] - 1, 1, 2)
+end
+-- force turtle to dig down (keeps digging until no block)
+local function force_dig_down()
+    count = 0
+    while (turtle.detectDown()) then
+        turtle.select(1)
+        turtle.digDown()
+        count = count + 1
+        if (count > 10) then
+            print_error(message_error_dig)
+            count = 0
+        end
+        os.sleep(0.5 * tick_delay)
+    end
 end
 -- uses all fuel in inventory
 local function use_all_fuel()
@@ -502,7 +548,7 @@ local function dig_ores(do_down)
                 is_block[i] = turtle.compareDown()
             end
             if not (is_block[1] or is_block[2] or is_block[3] or is_block[4]) then
-                turtle.digDown()
+                force_dig_down()
             end
         end
     else
@@ -515,7 +561,7 @@ local function dig_ores(do_down)
             end
 
             if not (is_block[1] or is_block[2] or is_block[3] or is_block[4]) then
-                turtle.digUp()
+                force_dig_up()
             end
         end
     end
@@ -530,7 +576,7 @@ local function dig_ores(do_down)
                 is_block[i] = turtle.compare()
             end
             if not (is_block[1] or is_block[2] or is_block[3] or is_block[4]) then
-                turtle.dig()
+                force_dig_forward()
             end
         end
     end
@@ -550,13 +596,13 @@ local function dig_out_trunk(length)
         if (trunk_height == 3) then
             force_up()
         end
-        turtle.digUp()
+        force_dig_up()
         rotate(1)
         for i=1,(trunk_width-1) do
             force_forward()
-            turtle.digUp()
+            force_dig_up()
             if (trunk_height == 3) then
-                turtle.digDown()
+                force_dig_down()
             end
         end
         rotate(3)
@@ -587,10 +633,12 @@ local function dig_branch()
         -- place supply chest
         force_up()
         force_up()
-        turtle.digUp()
+        force_dig_up()
         force_down()
         turtle.select(chest_slot)
-        turtle.placeUp()
+        if not (turtle.placeUp()) then
+            print_error(message_error_failed_to_place_chest)
+        end
         -- mine out top of branch
         for i=1,branch_length do
             set_task("Branch", string.format("%3d%%", (x-1)*50+((i/branch_length)*100)/4))
@@ -602,7 +650,7 @@ local function dig_branch()
                 rotate(2)
                 for j=1,branch_between_distance do
                     force_forward()
-                    turtle.digDown()
+                    force_dig_down()
                 end
                 rotate(0)
                 for j=1,branch_between_distance do
@@ -638,7 +686,9 @@ local function dig_branch()
             -- place torches
             if (i%torch_distance) == 1 then
                 turtle.select(torch_slot)
-                turtle.placeUp()
+                if not (turtle.placeUp()) then
+                    print_error(message_error_failed_to_place_torch, false, false)
+                end
             end
         end
 
