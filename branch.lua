@@ -177,7 +177,11 @@ local function wait_for_enter()
 --  if fatal is set to true, terminates program instead with error message
 local function print_error(error, fatal, wait)
     fatal = fatal or false
-    wait = wait or true
+    if (turtle == nil) then
+        wait = wait or false
+    else
+        wait = wait or true
+    end
 
     -- if turtle and transmit is on, send to reciever
     if (not (turtle == nil)) and (transmit_progress) then
