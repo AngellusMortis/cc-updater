@@ -5,7 +5,7 @@ local program_name = "Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-local program_version = "1.2.0"
+local program_version = "1.2.1"
 --[[
 
 ##type: turtle
@@ -159,9 +159,6 @@ local function send_message(message_type, data)
     transmitter.transmit(transmit_channel, receive_channel, textutils.serialize(data))
 
     if (message_type == "check") or (message_type == "branch_update") then
-        term.clear()
-        term.setCursorPos(1, 1)
-        print("checking...")
         os.startTimer(3)
         local do_loop = true
         while (do_loop) do
@@ -174,7 +171,6 @@ local function send_message(message_type, data)
                 -- confrim event
                 if (data["type"] == "confrim") and (data["turtle_id"] == os.computerID()) then
                     do_loop = false
-                    print("succeeded")
                 end
             elseif (event == "timer") then
                 do_loop = false
@@ -182,7 +178,6 @@ local function send_message(message_type, data)
                     data = {}
                     data["number_of_branches"] = number_of_branches
                     data["branch"] = progress["branch"]["current"]
-                    print("failed")
                     send_message("start", data)
                 end
             end
