@@ -67,7 +67,7 @@ Directions (T = turtle):
 
 
 ##parameters:
-args[1]: display to redreict to (side or name) (default: nil) enter "false" to disable redirection
+args[1]: display to redirect to (side or name) (default: nil) enter "false" to disable redirection
 args[2]: Use collected coal as fuel (default: false)
 args[3]: Number of branches
 args[4]: Number of blocks between each branch (default: 2)
@@ -91,11 +91,13 @@ local trunk_width = 2
 local trunk_height = 3
 
 -- turtle(slots) config
--- test slots should have 1 stone, gravel, dirt, and cobblestone in each
--- used for testing for ores
+-- chest and torch slots are to keep track of supplies
 local torch_slot = 1
 local chest_slot = 2
+-- cobblestone slot use to place so torch can be placed
 local cobblestone_slot = 3
+-- used for testing for ores (anything not in this list is considered an "ore")
+-- by default should be cobblestone, dirt, stone, and gravel
 local test_slots = {cobblestone_slot, 4, 5, 6}
 
 -- level of coal to reach when refueling
@@ -105,6 +107,7 @@ local tick_delay = 2
 
 -- wireless broadcast settings
 -- do broadcast
+-- on reciever will determine wether or not to retransmit (range extension)
 local transmit_progress = true
 -- variable to hold wireless modem
 local transmitter = nil
@@ -154,8 +157,10 @@ end
 -- send message to receiver
 local function send_message(message_type, data)
     data = data or {}
-    data["type"] = message_type
-    data["id"] = os.computerID()
+    if (data["retransmit_id"] == nil) then
+        data["type"] = message_type
+        data["id"] = os.computerID()
+    end
     transmitter.transmit(transmit_channel, receive_channel, textutils.serialize(data))
 
     if (message_type == "check") or (message_type == "branch_update") then
@@ -380,7 +385,7 @@ local function force_dig_forward()
         turtle.dig()
         count = count + 1
         if (count > 10 and turtle.detect()) or (count > 50) then
-            print_error(message_error_dig)
+            print_error(message_error_dig.." (forward)")
             count = 0
         end
         os.sleep(0.5 * tick_delay)
@@ -412,7 +417,7 @@ local function force_dig_up()
         turtle.digUp()
         count = count + 1
         if (count > 10) then
-            print_error(message_error_dig)
+            print_error(message_error_dig.." (up)")
             count = 0
         end
         os.sleep(0.5 * tick_delay)
@@ -444,7 +449,7 @@ local function force_dig_down()
         turtle.digDown()
         count = count + 1
         if (count > 10) then
-            print_error(message_error_dig)
+            print_error(message_error_dig.." (down)")
             count = 0
         end
         os.sleep(0.5 * tick_delay)
@@ -751,11 +756,17 @@ local function dig_branch()
             set_task("Emptying", string.format("%3d%%", (i/16)*100))
             turtle.select(i)
             if (i == torch_slot) or (i == chest_slot) then
-            elseif (i == test_slots[1]) or (i == test_slots[2]) or (i == test_slots[3]) or (i == test_slots[4]) then
-                to_drop = turtle.getItemCount(i)-1
-                turtle.dropUp(to_drop)
             else
-                turtle.dropUp(64)
+                is_test_block = false
+                for index,value in ipairs(test_slots) do
+                    is_test_block = (do_place or (i == value))
+                end
+                if (is_test_block) then
+                    to_drop = turtle.getItemCount(i)-1
+                    turtle.dropUp(to_drop)
+                else
+                    turtle.dropUp(64)
+                end
             end
         end
         set_task("Branch", string.format("%3d%%", x*50))
@@ -825,11 +836,19 @@ local function run_turtle_main()
 
         -- remind use to have stone, dirt, gravel, and cobblestone
         term.setCursorPos(1,4)
-        color_write("Put cobblestone in slot "..test_slots[1], colors.cyan)
+        color_write("Put cobblestone in slot "..cobblestone_slot, colors.cyan)
         term.setCursorPos(1,5)
-        color_write("Put stone, dirt, and gravel in slots ", colors.cyan)
+        temp_string = ""
+        for index,value in ipairs(test_slots) do
+            if (i == 1) then
+                temp_string = temp_string .. v
+            else
+                temp_string = temp_string .. v .. ", "
+            end
+        end
+        color_write("Put test blocks in slots ", colors.cyan)
         term.setCursorPos(4,6)
-        color_write(test_slots[2]..", "..test_slots[3]..", and "..test_slots[4], colors.cyan)
+        color_write(temp_string, colors.cyan)
         wait_for_enter()
         term.setCursorPos(1,4)
         clear_line()
@@ -1005,6 +1024,11 @@ local function run_reciever_main()
         -- exit event
         elseif (data["type"] == "exit") and (paired_id == data["id"]) then
             do_loop = false
+        end
+
+        if (transmit_progress) then
+            data["retransmit_id"] = os.computerID()
+            send_message(data["type"], data)
         end
     end
     set_task("Finished", "")
