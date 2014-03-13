@@ -69,6 +69,7 @@ Down: 5
 ##planned:
 #save/resume feature
 #automated updates
+#liquids
 
 ##issues:
 
@@ -114,6 +115,7 @@ local message_error_fuel = "Out of fuel"
 local message_error_chest = "Out of chests"
 local message_error_no_chest = "No chest to put items in"
 local message_error_torch = "Out of torches"
+local message_error_cobble = "Not enough cobblestone"
 local message_error_modem = "No modem connected"
 local message_error_modem_side = nil -- see init_settings
 local message_error_modem_wireless = "Modem cannot do wireless"
@@ -124,15 +126,23 @@ local message_error_failed_to_send_message = "Failed to send message"
 local message_error_display_width = "Display is not wide enough"
 local message_error_display_height = "Display is not tall enough"
 local message_error_trunk = "trunk_height must be 2 or 3"
+local message_error_liquids = "Encountered liquids"
 
 
 -- function prototypes (only as needed)
 local print_error = nil
 local log = nil
+local init_settings = nil
+local read_settings = nil
+local write_settings = nil
+local init_progress = nil
+local read_progress = nil
+local write_progress = nil
+local update_progress = nil
 
 -- functions
 -- init settings variable
-local function init_settings()
+init_settings = function()
     read_settings()
 
     if (settings == nil) then
@@ -178,13 +188,15 @@ local function init_settings()
         --  side monitor if perhiperal.find() is picking an undesired one (works with networked monitors)
         settings["redirect_to_monitor"] = true
         settings["monitor_side"] = nil
+
+        write_settings()
     end
 
     message_error_modem_side = "No modem connected ("..tostring(settings["transmitter_side"])..")"
 end
 -- writes current progress to progress file
-local function write_settings()
-    temp_seralized = textutils.serialize(progress)
+write_settings = function()
+    temp_seralized = textutils.serialize(settings)
     handle = fs.open(settings_file, "w")
 
     if (handle == nil) then
@@ -197,19 +209,21 @@ local function write_settings()
     log("write: settings: "..temp_seralized)
 end
 -- reads progress from progress file
-local function read_settings()
+read_settings = function()
     handle = fs.open(settings_file, "r")
 
     if not (handle == nil) then
         temp_seralized = handle.readAll()
-        progress = textutils.unserialize(temp_seralized)
-        temp_seralized = string.gsub(temp_seralized, "[\n ]", "")
-        log("read: settings: "..temp_seralized)
-        handle.close()
+        if (string.len(temp_seralized) > 5) then
+            settings = textutils.unserialize(temp_seralized)
+            temp_seralized = string.gsub(temp_seralized, "[\n ]", "")
+            log("read: settings: "..temp_seralized)
+            handle.close()
+        end
     end
 end
 -- init progress variable
-local function init_progress()
+init_progress = function()
     if not (turtle == nil) then
         read_progress()
     end
@@ -219,6 +233,9 @@ local function init_progress()
         progress["position"] = {{0, 0, 0}, 2}
         progress["branch"] = {}
         progress["branch"]["current"] = 1
+        progress["branch"]["progress"] = nil
+        progress["branch"]["side"] = nil
+        progress["branch"]["height"] = 1
         progress["trunk"] = {}
         progress["trunk"]["remaining"] = nil
         if (turtle == nil) then
@@ -228,7 +245,7 @@ local function init_progress()
     end
 end
 -- writes current progress to progress file
-local function write_progress()
+write_progress = function()
     temp_seralized = textutils.serialize(progress)
     handle = fs.open(progress_file, "w")
 
@@ -242,19 +259,21 @@ local function write_progress()
     log("write: progress: "..temp_seralized)
 end
 -- reads progress from progress file
-local function read_progress()
+read_progress = function()
     handle = fs.open(progress_file, "r")
 
     if not (handle == nil) then
         temp_seralized = handle.readAll()
-        progress = textutils.unserialize(temp_seralized)
-        temp_seralized = string.gsub(temp_seralized, "[\n ]", "")
-        log("read: progress: "..temp_seralized)
-        handle.close()
+        if (string.len(temp_seralized) > 5) then
+            progress = textutils.unserialize(temp_seralized)
+            temp_seralized = string.gsub(temp_seralized, "[\n ]", "")
+            log("read: progress: "..temp_seralized)
+            handle.close()
+        end
     end
 end
 -- updates value in progress variable (DO NOT DO IT MANUALLY)
-local function update_progress(progress_item, new_value, index_1, index_2)
+update_progress = function(progress_item, new_value, index_1, index_2)
     log("update: "..tostring(progress_item).."["..tostring(index_1).."]["..tostring(index_2).."] "..tostring(new_value))
     if (progress_item == "position") and (index_2 == nil) then
         progress[progress_item][index_1] = new_value
@@ -500,112 +519,184 @@ local function rotate(direction)
         turtle.turnLeft()
     end
 end
+local function detect_liquid_forward()
+    if (turtle.detect()) then
+        turtle.select(settings["cobblestone_slot"])
+        if (turtle.place()) then
+            print_error(message_error_liquids)
+        end
+    end
+end
 -- force the turtle to move forward
 --  kills anything in way
 --  digs anything out of the way
 --  can generate error if unable to move after 10 tries and block in front or 50 tries (mob)
 --  updates progress["position"]
-local function force_forward()
+local function force_forward(allow_fail)
+    allow_fail = allow_fail or false
     count = 0
-    while not (turtle.forward()) do
+    detect_liquid_forward()
+    success = turtle.forward()
+    while not (success) do
         turtle.select(1)
         turtle.attack()
         turtle.dig()
         count = count + 1
         if (count > 10 and turtle.detect()) or (count > 50) then
+            if (allow_fail) then
+                break
+            end
             print_error(message_error_move)
             count = 0
         end
         os.sleep(0.05 * settings["tick_delay"])
+        detect_liquid_forward()
+        success = turtle.forward()
     end
 
-    if (progress["position"][2] == 0) then
-        update_progress("position", progress["position"][1][3] - 1, 1, 3)
-    elseif (progress["position"][2] == 1) then
-        update_progress("position", progress["position"][1][1] + 1, 1, 1)
-    elseif (progress["position"][2] == 2) then
-        update_progress("position", progress["position"][1][3] + 1, 1, 3)
-    else
-        update_progress("position", progress["position"][1][1] - 1, 1, 1)
+    if (success) then
+        if (progress["position"][2] == 0) then
+            update_progress("position", progress["position"][1][3] - 1, 1, 3)
+        elseif (progress["position"][2] == 1) then
+            update_progress("position", progress["position"][1][1] + 1, 1, 1)
+        elseif (progress["position"][2] == 2) then
+            update_progress("position", progress["position"][1][3] + 1, 1, 3)
+        else
+            update_progress("position", progress["position"][1][1] - 1, 1, 1)
+        end
     end
 end
 -- force turtle to dig (keeps digging until no block)
-local function force_dig_forward()
+local function force_dig_forward(allow_fail)
+    allow_fail = allow_fail or false
     count = 0
+    detect_liquid_forward()
     while (turtle.detect()) do
         turtle.select(1)
         turtle.attack()
         turtle.dig()
         count = count + 1
         if (count > 10 and turtle.detect()) or (count > 50) then
+            if (allow_fail) then
+                break
+            end
             print_error(message_error_dig.." (forward)")
             count = 0
         end
-        os.sleep(0.5 * settings["tick_delay")
+        os.sleep(0.5 * settings["tick_delay"])
+        detect_liquid_forward()
+    end
+end
+local function detect_liquid_up()
+    if (turtle.detectUp()) then
+        turtle.select(settings["cobblestone_slot"])
+        if (turtle.placeUp()) then
+            print_error(message_error_liquids)
+        end
     end
 end
 -- force the turtle to move up
 --  digs anything out of the way
 --  can generate error if unable to move after 10 tries
 --  updates progress["position"]
-local function force_up()
+local function force_up(allow_fail)
+    allow_fail = allow_fail or false
     count = 0
-    while not (turtle.up()) do
+    detect_liquid_up()
+    success = turtle.up()
+    while not (success) do
         turtle.select(1)
         turtle.digUp()
         count = count + 1
         if (count > 10) then
+            if (allow_fail) then
+                break
+            end
             print_error(message_error_move)
             count = 0
         end
-        os.sleep(0.5 * settings["tick_delay")
+        os.sleep(0.5 * settings["tick_delay"])
+        detect_liquid_up()
+        success = turtle.up()
     end
-    update_progress("position", progress["position"][1][2] + 1, 1, 2)
+    if (success) then
+        update_progress("position", progress["position"][1][2] + 1, 1, 2)
+    end
 end
 -- force turtle to dig up (keeps digging until no block)
-local function force_dig_up()
+local function force_dig_up(allow_fail)
+    allow_fail = allow_fail or false
     count = 0
+    detect_liquid_up()
     while (turtle.detectUp()) do
         turtle.select(1)
         turtle.digUp()
         count = count + 1
         if (count > 10) then
+            if (allow_fail) then
+                break
+            end
             print_error(message_error_dig.." (up)")
             count = 0
         end
         os.sleep(0.5 * settings["tick_delay"])
+        detect_liquid_up()
+    end
+end
+local function detect_liquid_down()
+    if (turtle.detectDown()) then
+        turtle.select(settings["cobblestone_slot"])
+        if (turtle.placeDown()) then
+            print_error(message_error_liquids)
+        end
     end
 end
 -- force the turtle to move down
 --  digs anything out of the way
 --  can generate error if unable to move after 10 tries
 --  updates progress["position"]
-local function force_down()
+local function force_down(allow_fail)
+    allow_fail = allow_fail or false
     count = 0
-    while not (turtle.down()) do
+    detect_liquid_down()
+    success = turtle.down()
+    while not (success) do
         turtle.select(1)
         turtle.digDown()
         count = count + 1
         if (count > 10) then
+            if (allow_fail) then
+                break
+            end
             print_error(message_error_move)
             count = 0
         end
         os.sleep(0.5 * settings["tick_delay"])
+        detect_liquid_down()
+        success = turtle.down()
     end
-    update_progress("position", progress["position"][1][2] - 1, 1, 2)
+    if (success) then
+        update_progress("position", progress["position"][1][2] - 1, 1, 2)
+    end
 end
 -- force turtle to dig down (keeps digging until no block)
-local function force_dig_down()
+local function force_dig_down(allow_fail)
+    allow_fail = allow_fail or false
     count = 0
+    detect_liquid_down()
     while (turtle.detectDown()) do
         turtle.select(1)
         turtle.digDown()
         count = count + 1
         if (count > 10) then
+            if (allow_fail) then
+                break
+            end
             print_error(message_error_dig.." (down)")
             count = 0
         end
         os.sleep(0.5 * settings["tick_delay"])
+        detect_liquid_down()
     end
 end
 -- uses all fuel in inventory
@@ -685,13 +776,13 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
     if (turtle.getFuelLevel() < required_fuel) then
         set_task("Supplies", "Fuel")
         goto_position({(settings["trunk_width"]-1), 0, 0}, 1)
-        need_fuel = (turtle.getFuelLevel() < settings["min_continue_fuel_level")
+        need_fuel = (turtle.getFuelLevel() < settings["min_continue_fuel_level"])
         while (need_fuel) do
             if not (turtle.suck()) then
                 print_error(message_error_fuel)
             end
             use_all_fuel()
-            need_fuel = (turtle.getFuelLevel() < settings["min_continue_fuel_level")
+            need_fuel = (turtle.getFuelLevel() < settings["min_continue_fuel_level"])
         end
     end
 
@@ -720,7 +811,7 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
             turtle.select(settings["torch_slot"])
             turtle.drop()
             turtle.suck()
-            need_torches = (turtle.getItemCount(settings["torch_slot"]) <= (((settings["branch_length"]/settings["torch_distance")+1)*2))
+            need_torches = (turtle.getItemCount(settings["torch_slot"]) <= (((settings["branch_length"]/settings["torch_distance"])+1)*2))
             if (need_torches) then
                 print_error(message_error_torch)
             end
@@ -751,7 +842,7 @@ local function dig_ores(movement)
             not_ore_block = (not_ore_block or turtle.compareDown())
         end
         if not (not_ore_block) then
-            force_down()
+            force_down(true)
             movement[#movement+1]=4
             dig_ores(movement)
         end
@@ -764,7 +855,7 @@ local function dig_ores(movement)
             not_ore_block = (not_ore_block or turtle.compareUp())
         end
         if not (not_ore_block) then
-            force_up()
+            force_up(true)
             movement[#movement+1]=5
             dig_ores(movement)
         end
@@ -786,7 +877,7 @@ local function dig_ores(movement)
                 not_ore_block = (not_ore_block or turtle.compare())
             end
             if not (not_ore_block) then
-                force_forward()
+                force_forward(true)
                 movement[#movement+1]=get_opposite_direction(v)
                 dig_ores(movement)
             end
@@ -854,88 +945,99 @@ local function dig_branch()
     get_fuel_and_supplies_if_needed(required_fuel)
 
     set_task("Branch", string.format("%3d%%", 0))
-    -- each path through loop is one half of branch (each side of trunk)
-    for x=1,2 do
-        if (x == 1) then
-            rotate(3)
-        else
-            rotate(1)
-        end
-        -- place supply chest
-        force_up()
-        if not (turtle.compareUp()) then
-            force_up()
-            force_dig_up()
-            force_down()
-            turtle.select(settings["chest_slot")
-            while not (turtle.placeUp()) do
-                print_error(message_error_failed_to_place_chest)
-                turtle.select(settings["chest_slot")
+    progress["branch"]["side"] = progress["branch"]["side"] or 1
+    if (progress["branch"]["height"] == 1) then
+        -- each path through loop is one half of branch (each side of trunk)
+        for x=progress["branch"]["side"],2 do
+            update_progress("branch", x, "side")
+            if (x == 1) then
+                rotate(3)
+            else
+                rotate(1)
             end
-        end
-        -- mine out top of branch
-        for i=1,settings["branch_length"] do
-            set_task("Branch", string.format("%3d%%", (x-1)*50+((i/settings["branch_length"])*100)/4))
-            force_forward()
-            dig_ores()
-
-            -- mine out branch connectors
-            if (i%settings["branch_connector_distance"]) == 0 then
-                rotate(2)
-                for j=1,settings["branch_between_distance"] do
-                    force_forward()
-                    dig_ores()
-                end
-                force_down()
-                rotate(0)
-                for j=1,settings["branch_between_distance"] do
-                    force_forward()
-                    dig_ores()
-                end
+            if (progress["branch"]["progress"] == nil) then
+                -- place supply chest
                 force_up()
-                if (x == 1) then
-                    rotate(3)
-                else
-                    rotate(1)
-                end
-            end
-
-            -- verfiy blocks are in place for torches (placed later)
-            if (((i%settings["torch_distance") == 1)) then
-                if (has_error) then
-                    term_size = {term.getSize()}
-                    term.setCursorPos(1, (term_size[2]-2))
-                    clear_line()
-                    has_error = false
-                end
-                if (settings["transmit_progress"]) then
-                    send_message("check")
-                end
-                rotate(2)
-                if (not (turtle.detect())) or (not (turtle.detectUp())) then
-                    if (turtle.getItemCount(settings["cobblestone_slot"]) > 3) then
-                        turtle.placeUp()
-                        turtle.place()
-                    else
-                        print_error(message_error_failed_to_place_torch_wall, false, false)
+                if not (turtle.compareUp()) then
+                    force_up()
+                    force_dig_up()
+                    force_down()
+                    turtle.select(settings["chest_slot"])
+                    while not (turtle.placeUp()) do
+                        print_error(message_error_failed_to_place_chest)
+                        turtle.select(settings["chest_slot"])
                     end
                 end
-                if (x == 1) then
-                    rotate(3)
-                else
-                    rotate(1)
+            end
+            progress["branch"]["progress"] = progress["branch"]["progress"] or 1
+            -- mine out top of branch
+            for i=progress["branch"]["progress"],settings["branch_length"] do
+                update_progress("branch", i, "progress")
+                set_task("Branch", string.format("%3d%%", (x-1)*50+((i/settings["branch_length"])*100)/4))
+                force_forward()
+                dig_ores()
+
+                -- mine out branch connectors
+                if (i%settings["branch_connector_distance"]) == 0 then
+                    rotate(2)
+                    for j=1,settings["branch_between_distance"] do
+                        force_forward()
+                        dig_ores()
+                    end
+                    force_down()
+                    rotate(0)
+                    for j=1,settings["branch_between_distance"] do
+                        force_forward()
+                        dig_ores()
+                    end
+                    force_up()
+                    if (x == 1) then
+                        rotate(3)
+                    else
+                        rotate(1)
+                    end
                 end
 
+                -- verfiy blocks are in place for torches (placed later)
+                if (((i%settings["torch_distance"]) == 1)) then
+                    if (has_error) then
+                        term_size = {term.getSize()}
+                        term.setCursorPos(1, (term_size[2]-2))
+                        clear_line()
+                        has_error = false
+                    end
+                    if (settings["transmit_progress"]) then
+                        send_message("check")
+                    end
+                    rotate(2)
+                    if (not (turtle.detect())) or (not (turtle.detectUp())) then
+                        if (turtle.getItemCount(settings["cobblestone_slot"]) > 3) then
+                            turtle.select(settings["cobblestone_slot"])
+                            turtle.placeUp()
+                            turtle.place()
+                        else
+                            print_error(message_error_failed_to_place_torch_wall, false, false)
+                        end
+                    end
+                    if (x == 1) then
+                        rotate(3)
+                    else
+                        rotate(1)
+                    end
+
+                end
             end
+            if (x == 1) then
+                rotate(1)
+            else
+                rotate(3)
+            end
+            --mine out bottom level of branch (return)
+            force_down()
+            update_progress("branch", 0, "height")
+            update_progress("branch", 1, "progress")
         end
-        if (x == 1) then
-            rotate(1)
-        else
-            rotate(3)
-        end
-        --mine out bottom level of branch (return)
-        force_down()
-        for i=1,settings["branch_length"] do
+        for i=progress["branch"]["progress"],settings["branch_length"] do
             set_task("Branch", string.format("%3d%%", (x-1)*50+((i/settings["branch_length"])*100)/4+25))
             force_forward()
             dig_ores()
@@ -964,7 +1066,7 @@ local function dig_branch()
         if (settings["use_coal"]) then
             use_all_fuel()
         end
-        turtle.select(settings["chest_slot")
+        turtle.select(settings["chest_slot"])
         while not (turtle.compareUp()) do
             print_error(message_error_no_chest)
         end
@@ -972,7 +1074,7 @@ local function dig_branch()
         for i=1,16 do
             set_task("Emptying", string.format("%3d%%", (i/16)*100))
             turtle.select(i)
-            if (i == settings["torch_slot"]) or (i == settings["chest_slot") then
+            if (i == settings["torch_slot"]) or (i == settings["chest_slot"]) or (i == settings["cobblestone_slot"]) then
             else
                 is_test_block = false
                 for index,value in ipairs(test_slots) do
@@ -1051,7 +1153,7 @@ local function run_turtle_main()
         term.setCursorPos(1,ids_line+3)
         color_write("Leave slots 1 and 2 empty", colors.cyan)
         term.setCursorPos(1,ids_line+4)
-        color_write("Put cobblestone in slot "..settings["cobblestone_slot"], colors.cyan)
+        color_write("Put a stack of cobblestone in slot "..settings["cobblestone_slot"], colors.cyan)
         term.setCursorPos(1,ids_line+5)
         color_write("Put any \"do not mine\" blocks in others", colors.cyan)
         term.setCursorPos(3,ids_line+6)
@@ -1059,12 +1161,10 @@ local function run_turtle_main()
         term.setCursorPos(4,ids_line+7)
         color_write("dirt, gravel", colors.cyan)
         wait_for_enter()
-        -- add items in all slots but 1 and 2 to test_slots
-        for i=3,16 do
-            if (turtle.getItemCount(i) > 0) then
-                test_slots[#test_slots+1] = i
-            end
+        while (turtle.getItemCount(settings["cobblestone_slot"]) < 64) do
+            print_error(message_error_cobble)
         end
+        -- add items in all slots but 1 and 2 to test_slots
         term.setCursorPos(1,ids_line+3)
         clear_line()
         term.setCursorPos(1,ids_line+4)
@@ -1075,6 +1175,12 @@ local function run_turtle_main()
         clear_line()
         term.setCursorPos(1,ids_line+7)
         clear_line()
+    end
+
+    for i=3,16 do
+        if (turtle.getItemCount(i) > 0) then
+            test_slots[#test_slots+1] = i
+        end
     end
 
     -- print current branch data
@@ -1097,10 +1203,10 @@ local function run_turtle_main()
     -- if no progress, check for supplies and start
     if (progress["task"] == nil) then
     -- Verify starting fuel level
-    get_fuel_and_supplies_if_needed(settings["min_continue_fuel_level")
+    get_fuel_and_supplies_if_needed(settings["min_continue_fuel_level"])
 
     -- Dig to branch 1
-    dig_out_trunk(settings["branch_between_distance")
+    dig_out_trunk(settings["branch_between_distance"])
     elseif (progress["task"] == "trunk") then
 
     end
@@ -1296,6 +1402,7 @@ local function run_receiver_main()
 end
 
 local function main()
+    init_settings()
     init_progress()
     fs.delete(log_file)
     if not (turtle == nil) then
