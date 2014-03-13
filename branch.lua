@@ -63,8 +63,12 @@ Directions (T = turtle):
 
     0
 
+##planned:
+#mine ores deeper then one level
+#save/resume feature
+#automated updates
+
 ##issues:
-- get retransmitter reliablity up
 
 ##parameters:
 args[1]: display to redirect to (side or name) (default: nil) enter "false" to disable redirection
@@ -80,7 +84,7 @@ args[7]: Number of blocks between connections between branches (default: 26)
 local args = { ... }
 
 -- debug settings
-local debug = true
+local debug = false
 local log_file = ".branch.log"
 
 -- global variables
@@ -111,7 +115,7 @@ local tick_delay = 2
 
 -- wireless broadcast settings
 -- do broadcast
--- on reciever will determine wether or not to retransmit (range extension)
+-- on receiver will determine wether or not to retransmit (range extension)
 local transmit_progress = true
 -- variable to hold wireless modem
 local transmitter = nil
@@ -122,7 +126,7 @@ local transmitter_side = nil
 local transmit_channel = 60000
 local receive_channel = 60001
 
--- attempt to redirect to monitor for reciever?
+-- attempt to redirect to monitor for receiver?
 --  side monitor if perhiperal.find() is picking an undesired one (works with networked monitors)
 local redirect_to_monitor = true
 local monitor_side = args[1] or nil
@@ -142,11 +146,18 @@ local message_error_modem_side = "No modem connected ("..tostring(transmitter_si
 local message_error_modem_wireless = "Modem cannot do wireless"
 local message_error_failed_to_place_chest = "Could not place chest"
 local message_error_failed_to_place_torch = "Could not place torch"
+local message_error_failed_to_place_torch_wall = "Could not place wall for torch"
 local message_error_failed_to_send_message = "Failed to send message"
+local message_error_display_width = "Display is not wide enough"
+local message_error_display_height = "Display is not tall enough"
+local message_error_trunk = "trunk_height must be 2 or 3"
 
 -- settings for progress for resuming (not finished, do not touch)
 local progress_file = ".branch.progress"
 local progress = {}
+
+-- random variables
+local ids_line = 1
 
 -- prototypes (only as needed)
 local print_error = nil
@@ -163,6 +174,7 @@ local function init_progress()
     progress["trunk"]["remaining"] = nil
     if (turtle == nil) then
         progress["paired_id"] = nil
+        progress["retransmit_id"] = nil
     end
 end
 local function log(message)
@@ -183,60 +195,65 @@ local function log(message)
     end
 end
 -- send message to receiver
-local function send_message(message_type, data)
-    data = data or {}
-    if (data["turtle_id"] == nil) and not (turtle == nil) then
-        log("send: debug: setting id")
-        data["turtle_id"] = os.computerID()
-    elseif (data["turtle_id"] == nil) then
-        log("send: debug: setting id (reciever)")
-        data["turtle_id"] = progress["paired_id"]
+local function send_message(message_type, message_data)
+    message_data = message_data or {}
+    if (message_data["turtle_id"] == nil) and not (turtle == nil) then
+        message_data["turtle_id"] = os.computerID()
+    elseif (message_data["turtle_id"] == nil) then
+        message_data["turtle_id"] = progress["paired_id"]
     end
-    if (turtle == nil) and (data["retransmit_id"] == nil) then
-        log("send: debug: setting retransmit")
-        data["retransmit_id"] = os.computerID()
+    if (message_data["type"] == nil) then
+        message_data["type"] = message_type
     end
-    if (data["type"] == nil) then
-        log("send: debug: setting type")
-        data["type"] = message_type
+    if (turtle == nil) then
+        message_data["retransmit_id"] = os.computerID()
     end
 
-    if (data["type"] == nil) or (data["turtle_id"] == nil) then
-        temp_seralized = string.gsub(textutils.serialize(data), "[\n ]", "")
+    if (message_data["type"] == nil) or (message_data["turtle_id"] == nil) then
+        temp_seralized = string.gsub(textutils.serialize(message_data), "[\n ]", "")
         log("send: "..temp_seralized)
         print_error(message_error_failed_to_send_message, false, false)
         return
     end
-    temp_seralized = string.gsub(textutils.serialize(data), "[\n ]", "")
+    temp_seralized = string.gsub(textutils.serialize(message_data), "[\n ]", "")
     log("send: "..temp_seralized)
-    transmitter.transmit(transmit_channel, receive_channel, textutils.serialize(data))
+    transmitter.transmit(transmit_channel, receive_channel, textutils.serialize(message_data))
 
     if (message_type == "check") or (message_type == "branch_update") then
         os.startTimer(3)
         local do_loop = true
+        -- open channel for listening
+        if (turtle == nil) then
+            transmitter.close(transmit_channel)
+        end
+        transmitter.open(receive_channel)
         while (do_loop) do
             local event, modemSide, senderChannel,
                 replyChannel, message, senderDistance = os.pullEvent()
 
+            temp_seralized = string.gsub(tostring(message), "[\n ]", "")
+            log("pull: "..event..": "..temp_seralized)
             if (event == "modem_message") then
-                data = textutils.unserialize(message)
-                temp_seralized = string.gsub(message, "[\n ]", "")
-                log("receive: "..temp_seralized)
+                message_data = textutils.unserialize(message)
 
                 -- confrim event
-                if (data["type"] == "confrim") and
-                  (((turtle == nil) and (data["turtle_id"] == os.computerID())) or
-                   (not (turtle == nil) and (data["turtle_id"] == progress["paired_id"]) and (data["retransmit_id"] == os.computerID()))) then
+                if (message_data["type"] == "confrim") and
+                  ((not (turtle == nil) and (message_data["turtle_id"] == os.computerID())) or
+                   ((turtle == nil) and (message_data["turtle_id"] == progress["paired_id"]) and (message_data["retransmit_id"] == os.computerID()))) then
                     do_loop = false
                 end
             elseif (event == "timer") then
                 log("timer")
                 do_loop = false
-                data = {}
-                data["number_of_branches"] = number_of_branches
-                data["branch"] = progress["branch"]["current"]
-                send_message("start", data)
+                message_data = {}
+                message_data["number_of_branches"] = number_of_branches
+                message_data["branch"] = progress["branch"]["current"]
+                send_message("start", message_data)
             end
+        end
+        transmitter.close(receive_channel)
+        if (turtle == nil) then
+            transmitter.open(transmit_channel)
         end
     end
 end
@@ -249,7 +266,7 @@ local function clear_line()
     term.write(string.rep(" ",term_size[1]))
     term.setCursorPos(1, pos[2])
 end
--- used by reciever to confrim request
+-- used by receiver to confrim request
 local function send_confrim(id)
     if (has_error) then
         term_size = {term.getSize()}
@@ -257,12 +274,15 @@ local function send_confrim(id)
         clear_line()
         has_error = false
     end
-    data = {}
-    data["type"] = "confrim"
-    data["turtle_id"] = id
-    temp_seralized = string.gsub(textutils.serialize(data), "[\n ]", "")
+    local confrim_data = {}
+    confrim_data["type"] = "confrim"
+    confrim_data["turtle_id"] = id
+    if not (progress["retransmit_id"] == nil) then
+        confrim_data["retransmit_id"] = progress["retransmit_id"]
+    end
+    temp_seralized = string.gsub(textutils.serialize(confrim_data), "[\n ]", "")
     log("confrim: "..temp_seralized)
-    transmitter.transmit(receive_channel, transmit_channel, textutils.serialize(data))
+    transmitter.transmit(receive_channel, transmit_channel, textutils.serialize(confrim_data))
 end
 -- writes text in color, if display supports color
 local function color_write(text, color)
@@ -288,31 +308,35 @@ local function wait_for_enter()
 end
 -- prints error on second to last line and then waits for ENTER
 --  if fatal is set to true, terminates program instead with error message
-print_error = function (error, fatal, wait)
-    log("error: "..error.." ["..tostring(fatal).."]["..tostring(wait).."]")
+print_error = function (error_message, fatal, wait)
     fatal = fatal or false
     if (turtle == nil) and (wait == nil) then
         wait = false
     elseif (wait == nil) then
         wait = true
     end
+    local prefix = "ERROR"
+    if (wait == false) then
+        prefix = "WARN"
+    end
+    log(prefix..": "..error_message.." ["..tostring(fatal).."]["..tostring(wait).."]")
 
-    -- if turtle and transmit is on, send to reciever
+    -- if turtle and transmit is on, send to receiver
     if (not (turtle == nil)) and (transmit_progress) then
-        data = {}
-        data["error"] = error
-        send_message("error", data)
+        local error_data = {}
+        error_data["error"] = error_message
+        send_message("error", error_data)
     end
 
     -- if fatal, terminate
     if (fatal) then
-        error(error)
+        error(error_message)
     else
         has_error = true
         term_size = {term.getSize()}
         term.setCursorPos(1, (term_size[2]-2))
         clear_line()
-        color_write("ERROR: "..error, colors.red)
+        color_write(prefix..": "..error_message, colors.red)
         -- if turtle, wait for user to press ENTER
         if not (turtle == nil) then
             if (wait) then
@@ -321,11 +345,11 @@ print_error = function (error, fatal, wait)
                 clear_line()
                 has_error = false
             end
-            data = {}
-            -- if transmit, tell reciever error has been cleared
+            -- if transmit, tell receiver error has been cleared
             if (transmit_progress) then
-                data["error"] = message_error_clear
-                send_message("error", data)
+                local error_data = {}
+                error_data["error"] = message_error_clear
+                send_message("error", error_data)
             end
         else
             if (wait) then
@@ -378,25 +402,27 @@ local function update_progress(progress_item, new_value, index_1, index_2)
     else
         progress[progress_item] = new_value
     end
-    write_progress()
+    if not (turtle == nil) then
+        write_progress()
+    end
 end
 -- set current task for turtle (just for visual)
 local function set_task(main, sub)
     update_progress("task", main)
     log("task: "..main.." "..sub)
     term_size = {term.getSize()}
-    term.setCursorPos(1,5)
+    term.setCursorPos(1,ids_line+4)
     clear_line()
     color_write(main, colors.cyan)
-    term.setCursorPos(term_size[1]-((#sub)-1),5)
+    term.setCursorPos(term_size[1]-((#sub)-1),ids_line+4)
     color_write(sub, colors.yellow)
 
     -- if turtle and transmit, send task data to receivers
     if (not (turtle == nil)) and (transmit_progress) then
-        data = {}
-        data["main"] = main
-        data["sub"] = sub
-        send_message("task", data)
+        local send_data = {}
+        send_data["main"] = main
+        send_data["sub"] = sub
+        send_message("task", send_data)
     end
 end
 
@@ -793,16 +819,21 @@ local function dig_branch()
                 if (transmit_progress) then
                     send_message("check")
                 end
-                if (turtle.getItemCount(cobblestone_slot) > 3) then
-                    turtle.placeUp()
-                    rotate(2)
-                    turtle.place()
-                    if (x == 1) then
-                        rotate(3)
+                rotate(2)
+                if (not (turtle.detect())) or (not (turtle.detectUp())) then
+                    if (turtle.getItemCount(cobblestone_slot) > 3) then
+                        turtle.placeUp()
+                        turtle.place()
                     else
-                        rotate(1)
+                        print_error(message_error_failed_to_place_torch_wall, false, false)
                     end
                 end
+                if (x == 1) then
+                    rotate(3)
+                else
+                    rotate(1)
+                end
+
             end
         end
         if (x == 1) then
@@ -837,7 +868,6 @@ local function dig_branch()
         end
         -- empty out inventory (except for supplies)
         for i=1,16 do
-            --debug
             set_task("Emptying", string.format("%3d%%", (i/16)*100))
             turtle.select(i)
             if (i == torch_slot) or (i == chest_slot) then
@@ -879,29 +909,26 @@ end
 local function run_turtle_main()
     -- verify trunk height (program not adjusted for otherwise)
     if not (trunk_height==2 or trunk_height==3) then
-        error("trunk_height can only be 2 or 3")
+        print_error(message_error_trunk)
     end
     -- check for wireless modem, disable transmit if not there
     if (transmit_progress) then
         transmitter = peripheral.find("modem")
         if (transmitter == nil) then
             transmit_progress = false
-        else
-            -- open channel for listening
-            transmitter.open(receive_channel)
         end
     end
 
     -- print title
     term_size = {term.getSize()}
-    current_branch_location = {term_size[1]-9,3}
+    current_branch_location = {term_size[1]-9,ids_line+2}
     term.clear()
     term.setCursorPos(1,1)
     color_write(program_name.." v"..program_version, colors.lime)
     -- if transmit, print computer ID to indicate it
     if (transmit_progress) then
-        term.setCursorPos(term_size[1]-4,1)
-        color_write(string.format("%5d", os.computerID()), colors.red)
+        term.setCursorPos(term_size[1]-4,ids_line)
+        color_write(string.format("%5d", os.computerID()), colors.white)
     end
 
     -- read progress from last attempt
@@ -913,24 +940,24 @@ local function run_turtle_main()
         while (turtle.getFuelLevel() == 0) do
             use_all_fuel()
             if (turtle.getFuelLevel() == 0) then
-                term.setCursorPos(1,4)
+                term.setCursorPos(1,ids_line+3)
                 color_write("Put at least one piece of fuel in", colors.cyan)
                 wait_for_enter()
-                term.setCursorPos(1,4)
+                term.setCursorPos(1,ids_line+3)
                 clear_line()
             end
         end
 
         -- remind use to have stone, dirt, gravel, and cobblestone
-        term.setCursorPos(1,4)
+        term.setCursorPos(1,ids_line+3)
         color_write("Leave slots 1 and 2 empty", colors.cyan)
-        term.setCursorPos(1,5)
+        term.setCursorPos(1,ids_line+4)
         color_write("Put cobblestone in slot "..cobblestone_slot, colors.cyan)
-        term.setCursorPos(1,6)
+        term.setCursorPos(1,ids_line+5)
         color_write("Put any \"do not mine\" blocks in others", colors.cyan)
-        term.setCursorPos(3,7)
+        term.setCursorPos(3,ids_line+6)
         color_write("i.e.: cobblestone, stone,", colors.cyan)
-        term.setCursorPos(4,8)
+        term.setCursorPos(4,ids_line+7)
         color_write("dirt, gravel", colors.cyan)
         wait_for_enter()
         -- add items in all slots but 1 and 2 to test_slots
@@ -939,33 +966,33 @@ local function run_turtle_main()
                 test_slots[#test_slots+1] = i
             end
         end
-        term.setCursorPos(1,4)
+        term.setCursorPos(1,ids_line+3)
         clear_line()
-        term.setCursorPos(1,5)
+        term.setCursorPos(1,ids_line+4)
         clear_line()
-        term.setCursorPos(1,6)
+        term.setCursorPos(1,ids_line+5)
         clear_line()
-        term.setCursorPos(1,7)
+        term.setCursorPos(1,ids_line+6)
         clear_line()
-        term.setCursorPos(1,8)
+        term.setCursorPos(1,ids_line+7)
         clear_line()
     end
 
     -- print current branch data
-    term.setCursorPos(1,3)
+    term.setCursorPos(1,ids_line+2)
     color_write("Current Branch", colors.cyan)
     term.setCursorPos(unpack(current_branch_location))
     color_write(string.format("%3d", progress["branch"]["current"]), colors.yellow)
-    term.setCursorPos(term_size[1]-5,3)
+    term.setCursorPos(term_size[1]-5,ids_line+2)
     color_write("of", colors.white)
-    term.setCursorPos(term_size[1]-2,3)
+    term.setCursorPos(term_size[1]-2,ids_line+2)
     color_write(string.format("%3d", number_of_branches), colors.magenta)
 
-    -- if transmit, send start signal to reciever
+    -- if transmit, send start signal to receiver
     if (transmit_progress) then
-        data = {}
-        data["number_of_branches"] = number_of_branches
-        send_message("start", data)
+        local send_data = {}
+        send_data["number_of_branches"] = number_of_branches
+        send_message("start", send_data)
     end
 
     -- if no progress, check for supplies and start
@@ -983,14 +1010,14 @@ local function run_turtle_main()
     for i=progress["branch"]["current"],number_of_branches do
         update_progress("branch", i, "current")
         term.setCursorPos(unpack(current_branch_location))
-        color_write(string.format("%3d", i), colors.yellow)
+        color_write(string.format("%3d", progress["branch"]["current"]), colors.yellow)
         -- if transmit, update current branch
         if (transmit_progress) then
-            data = {}
-            data["branch"] = i
-            send_message("branch_update", data)
+            local send_data = {}
+            send_data["branch"] = progress["branch"]["current"]
+            send_message("branch_update", send_data)
         end
-        log("branch: "..i)
+        log("branch: "..progress["branch"]["current"])
         -- dig branch
         dig_branch()
         -- dig to next branch
@@ -1011,7 +1038,7 @@ local function run_turtle_main()
     term.clear()
 end
 
-local function run_reciever_main()
+local function run_receiver_main()
     local term_object = term
 
     -- check for transmitter
@@ -1055,23 +1082,28 @@ local function run_reciever_main()
         end
     end
 
-    -- open channel for listening
-    transmitter.open(transmit_channel)
-
     term_size = {term.getSize()}
-    current_branch_location = {term_size[1]-9,3}
 
     -- print title
     term.clear()
     term.setCursorPos(1,1)
-    color_write(program_name.." v"..program_version, colors.lime)
-    term.setCursorPos(1,3)
+    title = program_name.." v"..program_version
+    if (term_size[1] < string.len(title)+17) then
+        ids_line = 2
+        if (term_size[1] < string.len(title)) or (term_size[1] < 17) then
+            print_error(message_error_display_width, true)
+        end
+    end
+    if (term_size[2] < 12) then
+        print_error(message_error_display_height, true)
+    end
+    current_branch_location = {term_size[1]-9,ids_line+2}
+    color_write(title, colors.lime)
+    term.setCursorPos(1,ids_line+2)
     color_write("Waiting for turtle...", colors.magenta)
 
-    -- ID of turtle in which to listen for messages for
-    paired_id = nil
-    retransmit_id = nil
-
+    -- open channel for listening
+    transmitter.open(transmit_channel)
     -- listen for events
     do_loop = true
     while (do_loop) do
@@ -1080,66 +1112,79 @@ local function run_reciever_main()
 
         local retransmit = false
 
-        data = textutils.unserialize(message)
-        data["retransmit_id"] = data["retransmit_id"] or nil
+        local receiver_data = textutils.unserialize(message)
+        receiver_data["retransmit_id"] = receiver_data["retransmit_id"] or nil
 
-        temp_seralized = string.gsub(textutils.serialize(data), "[\n ]", "")
+        temp_seralized = string.gsub(textutils.serialize(receiver_data), "[\n ]", "")
         log("receive: "..temp_seralized)
 
         -- start event, can only be ran if waiting for turtle (paired_id == nil)
-        if (data["type"] == "start") and (paired_id == nil) then
-            paired_id = data["turtle_id"]
-            update_progress("paired_id", paired_id)
-            retransmit_id = data["retransmit_id"]
-            curent_branch = data["branch"] or 0
-            term.setCursorPos(term_size[1]-4,1)
-            color_write(string.format("%5d", paired_id), colors.red)
+        if (receiver_data["type"] == "start") and (progress["paired_id"] == nil) then
+            update_progress("paired_id", receiver_data["turtle_id"])
+            update_progress("retransmit_id", receiver_data["retransmit_id"])
+            update_progress("branch", receiver_data["branch"] or progress["branch"]["current"], "current")
+            number_of_branches = receiver_data["number_of_branches"]
 
-            term.setCursorPos(1,3)
+            if not (progress["retransmit_id"] == nil) then
+                term.setCursorPos(term_size[1]-16,ids_line)
+            else
+                term.setCursorPos(term_size[1]-10,ids_line)
+            end
+            color_write(string.format("%5d", os.computerID()), colors.white)
+            color_write(":", colors.yellow)
+            if not (progress["retransmit_id"] == nil) then
+                color_write(string.format("%5d", progress["retransmit_id"]), colors.green)
+                color_write(":", colors.yellow)
+            end
+            color_write(string.format("%5d", progress["paired_id"]), colors.red)
+
+            term.setCursorPos(1,ids_line+2)
             clear_line()
             color_write("Current Branch", colors.cyan)
             term.setCursorPos(unpack(current_branch_location))
-            color_write(string.format("%3d", curent_branch), colors.yellow)
-            term.setCursorPos(term_size[1]-5,3)
+            color_write(string.format("%3d", progress["branch"]["current"]), colors.yellow)
+            term.setCursorPos(term_size[1]-5,ids_line+2)
             color_write("of", colors.white)
-            term.setCursorPos(term_size[1]-2,3)
-            color_write(string.format("%3d", data["number_of_branches"]), colors.magenta)
+            term.setCursorPos(term_size[1]-2,ids_line+2)
+            color_write(string.format("%3d", number_of_branches), colors.magenta)
             retransmit = true
         -- branch_update event
-        elseif (data["type"] == "branch_update") and (paired_id == data["turtle_id"]) and (retransmit_id == data["retransmit_id"]) then
+        elseif (receiver_data["type"] == "branch_update") and (progress["paired_id"] == receiver_data["turtle_id"]) and (progress["retransmit_id"] == receiver_data["retransmit_id"]) then
+            update_progress("branch", receiver_data["branch"], "current")
             term.setCursorPos(unpack(current_branch_location))
-            color_write(string.format("%3d", data["branch"]), colors.yellow)
-            send_confrim(data["turtle_id"])
+            color_write(string.format("%3d", progress["branch"]["current"]), colors.yellow)
+            send_confrim(receiver_data["turtle_id"])
             retransmit = true
         -- task event
-        elseif (data["type"] == "task") and (paired_id == data["turtle_id"]) and (retransmit_id == data["retransmit_id"]) then
-            set_task(data["main"], data["sub"])
+        elseif (receiver_data["type"] == "task") and (progress["paired_id"] == receiver_data["turtle_id"]) and (progress["retransmit_id"] == receiver_data["retransmit_id"]) then
+            set_task(receiver_data["main"], receiver_data["sub"])
             retransmit = true
         -- error event
-        elseif (data["type"] == "check") and (paired_id == data["turtle_id"]) and (retransmit_id == data["retransmit_id"]) then
-            send_confrim(data["turtle_id"])
+        elseif (receiver_data["type"] == "check") and (progress["paired_id"] == receiver_data["turtle_id"]) and (progress["retransmit_id"] == receiver_data["retransmit_id"]) then
+            send_confrim(receiver_data["turtle_id"])
             retransmit = true
-        elseif (data["type"] == "error") and (paired_id == data["turtle_id"]) and (retransmit_id == data["retransmit_id"]) then
+        elseif (receiver_data["type"] == "error") and (progress["paired_id"] == receiver_data["turtle_id"]) and (progress["retransmit_id"] == receiver_data["retransmit_id"]) then
             -- clear previous error
-            if (data["error"] == message_error_clear) then
+            if (receiver_data["error"] == message_error_clear) then
                 term.setCursorPos(1, (term_size[2]-2))
                 clear_line()
             -- print error
             else
-                print_error(data["error"])
+                print_error(receiver_data["error"])
             end
             retransmit = true
         -- exit event
-        elseif (data["type"] == "exit") and (paired_id == data["turtle_id"]) and (retransmit_id == data["retransmit_id"]) then
+        elseif (receiver_data["type"] == "exit") and (progress["paired_id"] == receiver_data["turtle_id"]) and (progress["retransmit_id"] == receiver_data["retransmit_id"]) then
             do_loop = false
             retransmit = true
         end
 
         if (transmit_progress and retransmit) then
-            data["retransmit_id"] = os.computerID()
-            send_message(data["type"], data)
+            receiver_data["retransmit_id"] = nil
+            send_message(receiver_data["type"], receiver_data)
         end
     end
+    transmitter.close(transmit_channel)
     set_task("Finished", "")
     wait_for_enter()
     term.setCursorPos(1,1)
@@ -1157,7 +1202,7 @@ local function main()
     if not (turtle == nil) then
         run_turtle_main()
     else
-        run_reciever_main()
+        run_receiver_main()
     end
 end
 
