@@ -4,7 +4,7 @@ local program_name = "Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-local program_version = "1.3.0"
+local program_version = "1.3.1"
 --[[
 
 ##type: turtle
@@ -781,11 +781,11 @@ local function dig_branch()
         end
         -- place supply chest
         force_up()
-        turtle.select(chest_slot)
         if not (turtle.compareUp()) then
             force_up()
             force_dig_up()
             force_down()
+            turtle.select(chest_slot)
             if not (turtle.placeUp()) then
                 print_error(message_error_failed_to_place_chest)
             end
