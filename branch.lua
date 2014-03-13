@@ -224,7 +224,9 @@ local function send_message(message_type, data)
                 log("receive: "..temp_seralized)
 
                 -- confrim event
-                if (data["type"] == "confrim") and (data["turtle_id"] == os.computerID()) then
+                if (data["type"] == "confrim") and
+                  (((turtle == nil) and (data["turtle_id"] == os.computerID())) or
+                   (not (turtle == nil) and (data["turtle_id"] == progress["paired_id"]) and (data["retransmit_id"] == os.computerID()))) then
                     do_loop = false
                 end
             elseif (event == "timer") then
@@ -1076,6 +1078,8 @@ local function run_reciever_main()
         local event, modemSide, senderChannel,
             replyChannel, message, senderDistance = os.pullEvent("modem_message")
 
+        local retransmit = false
+
         data = textutils.unserialize(message)
         data["retransmit_id"] = data["retransmit_id"] or nil
 
@@ -1100,17 +1104,21 @@ local function run_reciever_main()
             color_write("of", colors.white)
             term.setCursorPos(term_size[1]-2,3)
             color_write(string.format("%3d", data["number_of_branches"]), colors.magenta)
+            retransmit = true
         -- branch_update event
         elseif (data["type"] == "branch_update") and (paired_id == data["turtle_id"]) and (retransmit_id == data["retransmit_id"]) then
             term.setCursorPos(unpack(current_branch_location))
             color_write(string.format("%3d", data["branch"]), colors.yellow)
             send_confrim(data["turtle_id"])
+            retransmit = true
         -- task event
         elseif (data["type"] == "task") and (paired_id == data["turtle_id"]) and (retransmit_id == data["retransmit_id"]) then
             set_task(data["main"], data["sub"])
+            retransmit = true
         -- error event
         elseif (data["type"] == "check") and (paired_id == data["turtle_id"]) and (retransmit_id == data["retransmit_id"]) then
             send_confrim(data["turtle_id"])
+            retransmit = true
         elseif (data["type"] == "error") and (paired_id == data["turtle_id"]) and (retransmit_id == data["retransmit_id"]) then
             -- clear previous error
             if (data["error"] == message_error_clear) then
@@ -1120,12 +1128,14 @@ local function run_reciever_main()
             else
                 print_error(data["error"])
             end
+            retransmit = true
         -- exit event
         elseif (data["type"] == "exit") and (paired_id == data["turtle_id"]) and (retransmit_id == data["retransmit_id"]) then
             do_loop = false
+            retransmit = true
         end
 
-        if (transmit_progress) then
+        if (transmit_progress and retransmit) then
             data["retransmit_id"] = os.computerID()
             send_message(data["type"], data)
         end
