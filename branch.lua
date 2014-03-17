@@ -141,56 +141,61 @@ local write_progress = nil
 local update_progress = nil
 
 -- functions
+-- need this function for bools
+local function setting_or_default(setting_value, default)
+    if (settings[setting_value] == nil) then
+        return default
+    end
+    return settings[setting_value]
+end
 -- init settings variable
 init_settings = function()
     read_settings()
 
-    if (settings == nil) then
-        settings = {}
+    settings = settings or {}
 
-        -- debug settings
-        settings["debug"] = false
+    -- debug settings
+    settings["debug"] = setting_or_default("debug", false)
 
-        -- mine config
-        settings["use_coal"] = false
-        settings["number_of_branches"] = 5
-        settings["branch_between_distance"] = 2
-        settings["branch_length"] = 52
-        settings["torch_distance"] = 10
-        settings["branch_connector_distance"] = 26
-        settings["trunk_width"] = 2
-        settings["trunk_height"] = 3
+    -- mine config
+    settings["use_coal"] = setting_or_default("use_coal", false)
+    settings["number_of_branches"] = settings["number_of_branches"] or 5
+    settings["branch_between_distance"] = settings["branch_between_distance"] or 2
+    settings["branch_length"] = settings["branch_length"] or 52
+    settings["torch_distance"] = settings["torch_distance"] or 10
+    settings["branch_connector_distance"] = settings["branch_connector_distance"] or 26
+    settings["trunk_width"] = settings["trunk_width"] or 2
+    settings["trunk_height"] = settings["trunk_height"] or 3
 
-        -- turtle(slots) config
-        -- chest and torch slots are to keep track of supplies
-        settings["torch_slot"] = 1
-        settings["chest_slot"] = 2
-        -- cobblestone slot use to place so torch can be placed
-        settings["cobblestone_slot"] = 3
+    -- turtle(slots) config
+    -- chest and torch slots are to keep track of supplies
+    settings["torch_slot"] = settings["torch_slot"] or 1
+    settings["chest_slot"] = settings["chest_slot"] or 2
+    -- cobblestone slot use to place so torch can be placed
+    settings["cobblestone_slot"] = settings["cobblestone_slot"] or 3
 
-        -- level of coal to reach when refueling
-        settings["min_continue_fuel_level"] = 500
-        -- ticks between attempts to move (see force_forward, force_up, and force_down)
-        settings["tick_delay"] = 2
+    -- level of coal to reach when refueling
+    settings["min_continue_fuel_level"] = settings["min_continue_fuel_level"] or 500
+    -- ticks between attempts to move (see force_forward, force_up, and force_down)
+    settings["tick_delay"] = settings["tick_delay"] or 2
 
-        -- wireless broadcast settings
-        -- do broadcast
-        -- on receiver will determine wether or not to retransmit (range extension)
-        settings["transmit_progress"] = true
-        -- if you have multiple modems (wired and wireless), set this to force
-        --  side of modem if perhiperal.find() is picking the wired one
-        settings["transmitter_side"] = nil
-        -- should not need to change these
-        settings["transmit_channel"] = 60000
-        settings["receive_channel"] = 60001
+    -- wireless broadcast settings
+    -- do broadcast
+    -- on receiver will determine wether or not to retransmit (range extension)
+    settings["transmit_progress"] = setting_or_default("transmit_progress", true)
+    -- if you have multiple modems (wired and wireless), set this to force
+    --  side of modem if perhiperal.find() is picking the wired one
+    settings["transmitter_side"] = setting_or_default("transmitter_side", nil)
+    -- should not need to change these
+    settings["transmit_channel"] = settings["transmit_channel"] or 60000
+    settings["receive_channel"] = settings["receive_channel"] or 60001
 
-        -- attempt to redirect to monitor for receiver?
-        --  side monitor if perhiperal.find() is picking an undesired one (works with networked monitors)
-        settings["redirect_to_monitor"] = true
-        settings["monitor_side"] = nil
+    -- attempt to redirect to monitor for receiver?
+    --  side monitor if perhiperal.find() is picking an undesired one (works with networked monitors)
+    settings["redirect_to_monitor"] = setting_or_default("redirect_to_monitor", true)
+    settings["monitor_side"] = setting_or_default("monitor_side", nil)
 
-        write_settings()
-    end
+    write_settings()
 
     message_error_modem_side = "No modem connected ("..tostring(settings["transmitter_side"])..")"
 end
