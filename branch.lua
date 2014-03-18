@@ -196,6 +196,7 @@ init_settings = function()
     settings["monitor_side"] = setting_or_default("monitor_side", nil)
 
     --save/load functionaility
+    -- WIP, do NOT use
     settings["allow_resume"] = setting_or_default("allow_resume", false)
 
     write_settings()
@@ -1077,51 +1078,50 @@ local function dig_branch()
                 end
             end
             update_progress("branch", nil, "progress")
-        end
-
-        set_task("Emptying", string.format("%3d%%", 0))
-        force_up()
-        -- use fuel is told too
-        if (settings["use_coal"]) then
-            use_all_fuel()
-        end
-        turtle.select(settings["chest_slot"])
-        while not (turtle.compareUp()) do
-            print_error(message_error_no_chest)
-        end
-        -- empty out inventory (except for supplies)
-        for i=1,16 do
-            set_task("Emptying", string.format("%3d%%", (i/16)*100))
-            turtle.select(i)
-            if (i == settings["torch_slot"]) or (i == settings["chest_slot"]) or (i == settings["cobblestone_slot"]) then
-            else
-                is_test_block = false
-                for index,value in ipairs(test_slots) do
-                    is_test_block = (is_test_block or (i == value))
-                end
-                if (is_test_block) then
-                    to_drop = turtle.getItemCount(i)-1
-                    if (to_drop > 0) then
-                        turtle.dropUp(to_drop)
-                    end
+            set_task("Emptying", string.format("%3d%%", 0))
+            force_up()
+            -- use fuel is told too
+            if (settings["use_coal"]) then
+                use_all_fuel()
+            end
+            turtle.select(settings["chest_slot"])
+            while not (turtle.compareUp()) do
+                print_error(message_error_no_chest)
+            end
+            -- empty out inventory (except for supplies)
+            for i=1,16 do
+                set_task("Emptying", string.format("%3d%%", (i/16)*100))
+                turtle.select(i)
+                if (i == settings["torch_slot"]) or (i == settings["chest_slot"]) or (i == settings["cobblestone_slot"]) then
                 else
-                    turtle.dropUp(64)
+                    is_test_block = false
+                    for index,value in ipairs(test_slots) do
+                        is_test_block = (is_test_block or (i == value))
+                    end
+                    if (is_test_block) then
+                        to_drop = turtle.getItemCount(i)-1
+                        if (to_drop > 0) then
+                            turtle.dropUp(to_drop)
+                        end
+                    else
+                        turtle.dropUp(64)
+                    end
                 end
             end
-        end
-        set_task("Branch", string.format("%3d%%", x*50))
-        force_down()
+            set_task("Branch", string.format("%3d%%", x*50))
+            force_down()
 
-        -- move to current location to continue
-        if (x == 1) then
-            rotate(1)
-            for i=1,(settings["trunk_width"]-1) do
-                force_forward()
-            end
-        else
-            rotate(3)
-            for i=1,(settings["trunk_width"]-1) do
-                force_forward()
+            -- move to current location to continue
+            if (x == 1) then
+                rotate(1)
+                for i=1,(settings["trunk_width"]-1) do
+                    force_forward()
+                end
+            else
+                rotate(3)
+                for i=1,(settings["trunk_width"]-1) do
+                    force_forward()
+                end
             end
         end
     end
