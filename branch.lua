@@ -195,6 +195,9 @@ init_settings = function()
     settings["redirect_to_monitor"] = setting_or_default("redirect_to_monitor", true)
     settings["monitor_side"] = setting_or_default("monitor_side", nil)
 
+    --save/load functionaility
+    settings["allow_resume"] = setting_or_default("allow_resume", false)
+
     write_settings()
 
     message_error_modem_side = "No modem connected ("..tostring(settings["transmitter_side"])..")"
@@ -248,6 +251,10 @@ init_progress = function()
             progress["retransmit_id"] = nil
         end
     end
+
+    if (settings["allow_resume"]) then
+        write_progress()
+    end
 end
 -- writes current progress to progress file
 write_progress = function()
@@ -289,7 +296,7 @@ update_progress = function(progress_item, new_value, index_1, index_2)
     else
         progress[progress_item] = new_value
     end
-    if not (turtle == nil) then
+    if not (turtle == nil) and (settings["allow_resume"]) then
         write_progress()
     end
 end
@@ -312,7 +319,7 @@ local function get_opposite_direction(direction)
 end
 -- if debug, logs message to file
 log = function(message)
-    if (debug) then
+    if (settings["debug"]) then
         handle = nil
         if (fs.exists(log_file)) then
             handle = fs.open(log_file, "a")
@@ -320,11 +327,11 @@ log = function(message)
             handle = fs.open(log_file, "w")
         end
         if (handle == nil) then
-            debug = false
-            print_error("Could not open log file")
+            settings["debug"] = false
+            print_error(message_error_file)
         else
             handle.writeLine("["..tostring(os.time()).."]: "..tostring(message))
-            handle.close(message_error_file)
+            handle.close()
         end
     end
 end
@@ -524,6 +531,7 @@ local function rotate(direction)
         turtle.turnLeft()
     end
 end
+-- only works in CC1.6
 local function detect_liquid_forward()
     if (turtle.detect()) then
         turtle.select(settings["cobblestone_slot"])
@@ -592,6 +600,7 @@ local function force_dig_forward(allow_fail)
         detect_liquid_forward()
     end
 end
+-- only works in CC1.6
 local function detect_liquid_up()
     if (turtle.detectUp()) then
         turtle.select(settings["cobblestone_slot"])
@@ -648,6 +657,7 @@ local function force_dig_up(allow_fail)
         detect_liquid_up()
     end
 end
+-- only works in CC1.6
 local function detect_liquid_down()
     if (turtle.detectDown()) then
         turtle.select(settings["cobblestone_slot"])
@@ -849,6 +859,7 @@ local function dig_ores(movement)
         if not (not_ore_block) then
             force_down(true)
             movement[#movement+1]=4
+            os.sleep(0.05 * settings["tick_delay"])
             dig_ores(movement)
         end
     end
@@ -862,6 +873,7 @@ local function dig_ores(movement)
         if not (not_ore_block) then
             force_up(true)
             movement[#movement+1]=5
+            os.sleep(0.05 * settings["tick_delay"])
             dig_ores(movement)
         end
     end
@@ -884,6 +896,7 @@ local function dig_ores(movement)
             if not (not_ore_block) then
                 force_forward(true)
                 movement[#movement+1]=get_opposite_direction(v)
+                os.sleep(0.05 * settings["tick_delay"])
                 dig_ores(movement)
             end
         end
@@ -1041,28 +1054,29 @@ local function dig_branch()
             force_down()
             update_progress("branch", 0, "height")
             update_progress("branch", 1, "progress")
-        end
-        for i=progress["branch"]["progress"],settings["branch_length"] do
-            set_task("Branch", string.format("%3d%%", (x-1)*50+((i/settings["branch_length"])*100)/4+25))
-            force_forward()
-            dig_ores()
+            for i=progress["branch"]["progress"],settings["branch_length"] do
+                set_task("Branch", string.format("%3d%%", (x-1)*50+((i/settings["branch_length"])*100)/4+25))
+                force_forward()
+                dig_ores()
 
-            -- place torches
-            if (i%settings["torch_distance"]) == 1 then
-                if (has_error) then
-                    term_size = {term.getSize()}
-                    term.setCursorPos(1, (term_size[2]-2))
-                    clear_line()
-                    has_error = false
-                end
-                if (settings["transmit_progress"]) then
-                    send_message("check")
-                end
-                turtle.select(settings["torch_slot"])
-                if not (turtle.placeUp()) then
-                    print_error(message_error_failed_to_place_torch, false, false)
+                -- place torches
+                if (i%settings["torch_distance"]) == 1 then
+                    if (has_error) then
+                        term_size = {term.getSize()}
+                        term.setCursorPos(1, (term_size[2]-2))
+                        clear_line()
+                        has_error = false
+                    end
+                    if (settings["transmit_progress"]) then
+                        send_message("check")
+                    end
+                    turtle.select(settings["torch_slot"])
+                    if not (turtle.placeUp()) then
+                        print_error(message_error_failed_to_place_torch, false, false)
+                    end
                 end
             end
+            update_progress("branch", nil, "progress")
         end
 
         set_task("Emptying", string.format("%3d%%", 0))
