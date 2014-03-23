@@ -21,6 +21,8 @@ program_version = "5.0.0"
 --]]
 
 local args = { ... }
+
+local update_url = "https://tundrasofangmar.net/cc/"
 local update_self = false
 
 local old = shell.dir()
