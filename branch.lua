@@ -550,8 +550,8 @@ local function force_forward(allow_fail)
     allow_fail = allow_fail or false
     count = 0
     detect_liquid_forward()
-    success = turtle.forward()
-    while not (success) do
+    local move_success = turtle.forward()
+    while not (move_success) do
         turtle.select(1)
         turtle.attack()
         turtle.dig()
@@ -565,10 +565,10 @@ local function force_forward(allow_fail)
         end
         os.sleep(0.05 * settings["tick_delay"])
         detect_liquid_forward()
-        success = turtle.forward()
+        move_success = turtle.forward()
     end
 
-    if (success) then
+    if (move_success) then
         if (progress["position"][2] == 0) then
             update_progress("position", progress["position"][1][3] - 1, 1, 3)
         elseif (progress["position"][2] == 1) then
@@ -938,8 +938,12 @@ local function dig_out_trunk(length)
         rotate(1)
         for i=1,(settings["trunk_width"]-1) do
             force_forward()
-            turtle.select(settings["chest_slot"])
-            if not (turtle.compareUp()) then
+            if (i == settings["trunk_width"]-1) then
+                turtle.select(settings["chest_slot"])
+                if not (turtle.compareUp()) then
+                    force_dig_up()
+                end
+            else
                 force_dig_up()
             end
             if (settings["trunk_height"] == 3) then
@@ -965,15 +969,17 @@ local function dig_branch()
 
     set_task("Branch", string.format("%3d%%", 0))
     progress["branch"]["side"] = progress["branch"]["side"] or 1
-    if (progress["branch"]["height"] == 1) then
-        -- each path through loop is one half of branch (each side of trunk)
-        for x=progress["branch"]["side"],2 do
-            update_progress("branch", x, "side")
-            if (x == 1) then
-                rotate(3)
-            else
-                rotate(1)
-            end
+
+    -- each path through loop is one half of branch (each side of trunk)
+    for x=progress["branch"]["side"],2 do
+        update_progress("branch", x, "side")
+        if (x == 1) then
+            rotate(3)
+        else
+            rotate(1)
+        end
+
+        if (progress["branch"]["height"] == 1) then
             if (progress["branch"]["progress"] == nil) then
                 -- place supply chest
                 force_up()
@@ -986,6 +992,9 @@ local function dig_branch()
                         print_error(message_error_failed_to_place_chest)
                         turtle.select(settings["chest_slot"])
                     end
+                else
+                    turtle.select(settings["chest_slot"])
+                    turtle.placeUp()
                 end
             end
             progress["branch"]["progress"] = progress["branch"]["progress"] or 1
@@ -1019,6 +1028,7 @@ local function dig_branch()
 
                 -- verfiy blocks are in place for torches (placed later)
                 if (((i%settings["torch_distance"]) == 1)) then
+                    log("branch: place: torch wall")
                     if (has_error) then
                         term_size = {term.getSize()}
                         term.setCursorPos(1, (term_size[2]-2))
@@ -1043,7 +1053,6 @@ local function dig_branch()
                     else
                         rotate(1)
                     end
-
                 end
             end
             if (x == 1) then
@@ -1055,75 +1064,84 @@ local function dig_branch()
             force_down()
             update_progress("branch", 0, "height")
             update_progress("branch", 1, "progress")
-            for i=progress["branch"]["progress"],settings["branch_length"] do
-                set_task("Branch", string.format("%3d%%", (x-1)*50+((i/settings["branch_length"])*100)/4+25))
-                force_forward()
-                dig_ores()
+        end
 
-                -- place torches
-                if (i%settings["torch_distance"]) == 1 then
-                    if (has_error) then
-                        term_size = {term.getSize()}
-                        term.setCursorPos(1, (term_size[2]-2))
-                        clear_line()
-                        has_error = false
-                    end
-                    if (settings["transmit_progress"]) then
-                        send_message("check")
-                    end
-                    turtle.select(settings["torch_slot"])
-                    if not (turtle.placeUp()) then
-                        print_error(message_error_failed_to_place_torch, false, false)
-                    end
-                end
-            end
-            update_progress("branch", nil, "progress")
-            set_task("Emptying", string.format("%3d%%", 0))
-            force_up()
-            -- use fuel is told too
-            if (settings["use_coal"]) then
-                use_all_fuel()
-            end
-            turtle.select(settings["chest_slot"])
-            while not (turtle.compareUp()) do
-                print_error(message_error_no_chest)
-            end
-            -- empty out inventory (except for supplies)
-            for i=1,16 do
-                set_task("Emptying", string.format("%3d%%", (i/16)*100))
-                turtle.select(i)
-                if (i == settings["torch_slot"]) or (i == settings["chest_slot"]) or (i == settings["cobblestone_slot"]) then
-                else
-                    is_test_block = false
-                    for index,value in ipairs(test_slots) do
-                        is_test_block = (is_test_block or (i == value))
-                    end
-                    if (is_test_block) then
-                        to_drop = turtle.getItemCount(i)-1
-                        if (to_drop > 0) then
-                            turtle.dropUp(to_drop)
-                        end
-                    else
-                        turtle.dropUp(64)
-                    end
-                end
-            end
-            set_task("Branch", string.format("%3d%%", x*50))
-            force_down()
+        if (progress["branch"]["progress"] == nil) then
+            update_progress("branch", 1, "progress")
+        end
 
-            -- move to current location to continue
-            if (x == 1) then
-                rotate(1)
-                for i=1,(settings["trunk_width"]-1) do
-                    force_forward()
+        for i=progress["branch"]["progress"],settings["branch_length"] do
+            set_task("Branch", string.format("%3d%%", (x-1)*50+((i/settings["branch_length"])*100)/4+25))
+            force_forward()
+            dig_ores()
+
+            -- place torches
+            if (i%settings["torch_distance"]) == 1 then
+                log("branch: place: torch")
+                if (has_error) then
+                    term_size = {term.getSize()}
+                    term.setCursorPos(1, (term_size[2]-2))
+                    clear_line()
+                    has_error = false
                 end
-            else
-                rotate(3)
-                for i=1,(settings["trunk_width"]-1) do
-                    force_forward()
+                if (settings["transmit_progress"]) then
+                    send_message("check")
+                end
+                turtle.select(settings["torch_slot"])
+                if not (turtle.placeUp()) then
+                    print_error(message_error_failed_to_place_torch, false, false)
                 end
             end
         end
+        update_progress("branch", nil, "progress")
+        set_task("Emptying", string.format("%3d%%", 0))
+        force_up()
+        -- use fuel is told too
+        if (settings["use_coal"]) then
+            use_all_fuel()
+        end
+        turtle.select(settings["chest_slot"])
+        while not (turtle.compareUp()) do
+            print_error(message_error_no_chest)
+        end
+        -- empty out inventory (except for supplies)
+        for i=1,16 do
+            set_task("Emptying", string.format("%3d%%", (i/16)*100))
+            turtle.select(i)
+            if (i == settings["torch_slot"]) or (i == settings["chest_slot"]) or (i == settings["cobblestone_slot"]) then
+            else
+                is_test_block = false
+                for index,value in ipairs(test_slots) do
+                    is_test_block = (is_test_block or (i == value))
+                end
+                if (is_test_block) then
+                    to_drop = turtle.getItemCount(i)-1
+                    if (to_drop > 0) then
+                        turtle.dropUp(to_drop)
+                    end
+                else
+                    turtle.dropUp(64)
+                end
+            end
+        end
+        set_task("Branch", string.format("%3d%%", x*50))
+        force_down()
+
+        -- move to current location to continue
+        if (x == 1) then
+            rotate(1)
+            for i=1,(settings["trunk_width"]-1) do
+                force_forward()
+            end
+        else
+            rotate(3)
+            for i=1,(settings["trunk_width"]-1) do
+                force_forward()
+            end
+        end
+
+        update_progress("branch", 1, "height")
+        update_progress("branch", 1, "progress")
     end
 
     rotate(2)
@@ -1136,7 +1154,11 @@ local function run_turtle_main()
     end
     -- check for wireless modem, disable transmit if not there
     if (settings["transmit_progress"]) then
-        transmitter = peripheral.find("modem")
+        if not (settings["transmitter_side"] == nil) then
+            transmitter = peripheral.wrap(settings["transmitter_side"])
+        else
+            transmitter = peripheral.find("modem")
+        end
         if (transmitter == nil) then
             settings["transmit_progress"] = false
         end
