@@ -1,10 +1,10 @@
 --[[
 ##name: ]]--
-local program_name = "Branch Mining"
+program_name = "Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-local program_version = "1.5.1"
+program_version = "1.5.1"
 --[[
 
 ##type: turtle
