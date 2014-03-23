@@ -556,6 +556,9 @@ local function force_forward(allow_fail)
         turtle.select(1)
         turtle.attack()
         turtle.dig()
+        turtle.suck()
+        turtle.suckUp()
+        turtle.suckDown()
         count = count + 1
         if (count > 10 and turtle.detect()) or (count > 50) then
             if (allow_fail) then
@@ -590,6 +593,9 @@ local function force_dig_forward(allow_fail)
         turtle.select(1)
         turtle.attack()
         turtle.dig()
+        turtle.suck()
+        turtle.suckUp()
+        turtle.suckDown()
         count = count + 1
         if (count > 10 and turtle.detect()) or (count > 50) then
             if (allow_fail) then
@@ -623,6 +629,7 @@ local function force_up(allow_fail)
     while not (success) do
         turtle.select(1)
         turtle.digUp()
+        turtle.suckUp()
         count = count + 1
         if (count > 10) then
             if (allow_fail) then
@@ -647,6 +654,7 @@ local function force_dig_up(allow_fail)
     while (turtle.detectUp()) do
         turtle.select(1)
         turtle.digUp()
+        turtle.suckUp()
         count = count + 1
         if (count > 10) then
             if (allow_fail) then
@@ -680,6 +688,7 @@ local function force_down(allow_fail)
     while not (success) do
         turtle.select(1)
         turtle.digDown()
+        turtle.suckDown()
         count = count + 1
         if (count > 10) then
             if (allow_fail) then
@@ -704,6 +713,7 @@ local function force_dig_down(allow_fail)
     while (turtle.detectDown()) do
         turtle.select(1)
         turtle.digDown()
+        turtle.suckDown()
         count = count + 1
         if (count > 10) then
             if (allow_fail) then
@@ -843,7 +853,7 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
 
     empty_slots = false
     for i=1,16 do
-        empty_slots = empty_slots or (turtle.getItemCount(i) > 0)
+        empty_slots = empty_slots or (turtle.getItemCount(i) == 0)
     end
     if not empty_slots then
         has_moved = true
@@ -1483,7 +1493,7 @@ local function run_receiver_main()
     wait_for_enter()
     term.setCursorPos(1,1)
     term.clear()
-    modem.closeAll()
+    transmitter.closeAll()
 
     if (settings["redirect_to_monitor"]) then
         term.redirect(term_object)
