@@ -4,7 +4,7 @@ local program_name = "Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-local program_version = "1.4.0"
+local program_version = "1.5.0"
 --[[
 
 ##type: turtle
@@ -139,6 +139,7 @@ local init_progress = nil
 local read_progress = nil
 local write_progress = nil
 local update_progress = nil
+local empty_inventory = nil
 
 -- functions
 -- need this function for bools
@@ -783,13 +784,18 @@ local function get_distance_from_fuel()
     -- fuel position is (trunk_width-1, 0, 0)
     return math.abs(progress["position"][1][1]-(settings["trunk_width"]-1))+math.abs(progress["position"][1][2])+math.abs(progress["position"][1][3])
 end
+local function get_fuel_amount_for_branch()
+    return get_distance_from_fuel() + ((settings["branch_length"] + (settings["branch_length"]/settings["branch_connector_distance"])*(settings["branch_between_distance"]*2))*2 + settings["trunk_width"])*2
+end
 -- test if it is nesscary to get resources
 local function get_fuel_and_supplies_if_needed(required_fuel)
     set_task("Supplies", "Checking")
 
     -- check fuel
     local previous_position = {{progress["position"][1][1], progress["position"][1][2], progress["position"][1][3]}, progress["position"][2]}
+    local has_moved = false
     if (turtle.getFuelLevel() < required_fuel) then
+        has_moved = true
         set_task("Supplies", "Fuel")
         goto_position({(settings["trunk_width"]-1), 0, 0}, 1)
         need_fuel = (turtle.getFuelLevel() < settings["min_continue_fuel_level"])
@@ -807,6 +813,7 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
     local need_chests = (turtle.getItemCount(settings["chest_slot"]) <= 1)
     local need_torches = (turtle.getItemCount(settings["torch_slot"]) <= (((settings["branch_length"]/settings["torch_distance"])+1)*2))
     if (need_chests or need_torches) then
+        has_moved = true
         set_task("Supplies", "Items")
         goto_position({0, 0, 0}, 3)
 
@@ -834,12 +841,46 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
         end
     end
 
-    -- return to previous position
-    set_task("Supplies", "Returning")
-    goto_position(unpack(previous_position))
+    empty_slots = false
+    for i=1,16 do
+        empty_slots = empty_slots or (turtle.getItemCount(i) > 0)
+    end
+    if not empty_slots then
+        has_moved = true
+        set_task("Supplies", "Emptying")
+        goto_position({progress["branch"]["side"]-1, 1, settings["branch_between_distance"]*progress["branch"]["current"]}, 2)
+        empty_inventory()
+    end
+
+    if (has_moved) then
+        -- return to previous position
+        set_task("Supplies", "Returning")
+        goto_position(unpack(previous_position))
+    end
 end
 
 -- main functions
+empty_inventory = function()
+    for i=1,16 do
+        set_task("Emptying", string.format("%3d%%", (i/16)*100))
+        turtle.select(i)
+        if (i == settings["torch_slot"]) or (i == settings["chest_slot"]) or (i == settings["cobblestone_slot"]) then
+        else
+            is_test_block = false
+            for index,value in ipairs(test_slots) do
+                is_test_block = (is_test_block or (i == value))
+            end
+            if (is_test_block) then
+                to_drop = turtle.getItemCount(i)-1
+                if (to_drop > 0) then
+                    turtle.dropUp(to_drop)
+                end
+            else
+                turtle.dropUp(64)
+            end
+        end
+    end
+end
 -- check for ores and mine them if they are there
 --   will mine out anything that is not stone, dirt, gravel, or cobblestone
 --   if do_down, will check block below turtle, otherwise, will check block above
@@ -858,6 +899,12 @@ local function dig_ores(movement)
             not_ore_block = (not_ore_block or turtle.compareDown())
         end
         if not (not_ore_block) then
+            if (#movement == 0) then
+                -- check for needed supplies
+                required_fuel = get_fuel_amount_for_branch()
+                get_fuel_and_supplies_if_needed(required_fuel)
+                set_task("Mining Vein", "")
+            end
             force_down(true)
             movement[#movement+1]=4
             os.sleep(0.05 * settings["tick_delay"])
@@ -872,6 +919,12 @@ local function dig_ores(movement)
             not_ore_block = (not_ore_block or turtle.compareUp())
         end
         if not (not_ore_block) then
+            if (#movement == 0) then
+                -- check for needed supplies
+                required_fuel = get_fuel_amount_for_branch()
+                get_fuel_and_supplies_if_needed(required_fuel)
+                set_task("Mining Vein", "")
+            end
             force_up(true)
             movement[#movement+1]=5
             os.sleep(0.05 * settings["tick_delay"])
@@ -895,6 +948,12 @@ local function dig_ores(movement)
                 not_ore_block = (not_ore_block or turtle.compare())
             end
             if not (not_ore_block) then
+                if (#movement == 0) then
+                    -- check for needed supplies
+                    required_fuel = get_fuel_amount_for_branch()
+                    get_fuel_and_supplies_if_needed(required_fuel)
+                    set_task("Mining Vein", "")
+                end
                 force_forward(true)
                 movement[#movement+1]=get_opposite_direction(v)
                 os.sleep(0.05 * settings["tick_delay"])
@@ -921,7 +980,7 @@ end
 local function dig_out_trunk(length)
     log("trunk: "..length)
     -- check for needed supplies
-    required_fuel = get_distance_from_fuel() + (length * ((settings["trunk_height"]-1) * 2) + settings["trunk_width"]) * 2
+    required_fuel = get_fuel_amount_for_branch()
     get_fuel_and_supplies_if_needed(required_fuel)
 
     set_task("Trunk", string.format("%3d%%", 0))
@@ -979,8 +1038,12 @@ local function dig_branch()
             rotate(1)
         end
 
+        if (progress["branch"]["height"] == nil) then
+            update_progress("branch", 1, "height")
+        end
+
         if (progress["branch"]["height"] == 1) then
-            if (progress["branch"]["progress"] == nil) then
+            if (progress["branch"]["progress"] == nil) or (progress["branch"]["progress"] == 1) then
                 -- place supply chest
                 force_up()
                 if not (turtle.compareUp()) then
@@ -1105,25 +1168,7 @@ local function dig_branch()
             print_error(message_error_no_chest)
         end
         -- empty out inventory (except for supplies)
-        for i=1,16 do
-            set_task("Emptying", string.format("%3d%%", (i/16)*100))
-            turtle.select(i)
-            if (i == settings["torch_slot"]) or (i == settings["chest_slot"]) or (i == settings["cobblestone_slot"]) then
-            else
-                is_test_block = false
-                for index,value in ipairs(test_slots) do
-                    is_test_block = (is_test_block or (i == value))
-                end
-                if (is_test_block) then
-                    to_drop = turtle.getItemCount(i)-1
-                    if (to_drop > 0) then
-                        turtle.dropUp(to_drop)
-                    end
-                else
-                    turtle.dropUp(64)
-                end
-            end
-        end
+        empty_inventory()
         set_task("Branch", string.format("%3d%%", x*50))
         force_down()
 
@@ -1144,6 +1189,9 @@ local function dig_branch()
         update_progress("branch", 1, "progress")
     end
 
+    update_progress("branch", 1, "height")
+    update_progress("branch", 1, "progress")
+    update_progress("branch", 1, "side")
     rotate(2)
 end
 
