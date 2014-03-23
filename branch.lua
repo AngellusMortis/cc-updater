@@ -4,7 +4,7 @@ local program_name = "Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-local program_version = "1.5.0"
+local program_version = "1.5.1"
 --[[
 
 ##type: turtle
@@ -556,9 +556,7 @@ local function force_forward(allow_fail)
         turtle.select(1)
         turtle.attack()
         turtle.dig()
-        turtle.suck()
-        turtle.suckUp()
-        turtle.suckDown()
+
         count = count + 1
         if (count > 10 and turtle.detect()) or (count > 50) then
             if (allow_fail) then
@@ -573,6 +571,10 @@ local function force_forward(allow_fail)
     end
 
     if (move_success) then
+        turtle.suck()
+        turtle.suckUp()
+        turtle.suckDown()
+
         if (progress["position"][2] == 0) then
             update_progress("position", progress["position"][1][3] - 1, 1, 3)
         elseif (progress["position"][2] == 1) then
@@ -629,7 +631,6 @@ local function force_up(allow_fail)
     while not (success) do
         turtle.select(1)
         turtle.digUp()
-        turtle.suckUp()
         count = count + 1
         if (count > 10) then
             if (allow_fail) then
@@ -643,6 +644,7 @@ local function force_up(allow_fail)
         success = turtle.up()
     end
     if (success) then
+        turtle.suckUp()
         update_progress("position", progress["position"][1][2] + 1, 1, 2)
     end
 end
@@ -688,7 +690,6 @@ local function force_down(allow_fail)
     while not (success) do
         turtle.select(1)
         turtle.digDown()
-        turtle.suckDown()
         count = count + 1
         if (count > 10) then
             if (allow_fail) then
@@ -702,6 +703,7 @@ local function force_down(allow_fail)
         success = turtle.down()
     end
     if (success) then
+        turtle.suckDown()
         update_progress("position", progress["position"][1][2] - 1, 1, 2)
     end
 end
