@@ -2,9 +2,9 @@
 ##name: ]]--
 program_name = "am-cc Updater"
 --[[
-##file: am/turtle/branch.lua
+##file: am/programs/update.lua
 ##version: ]]--
-program_version = "5.0.0"
+program_version = "5.0.0.1"
 --[[
 
 ##type: program
@@ -87,6 +87,7 @@ local function get_version_info(path)
                 version_info["major"] = tonumber(temp_version[1])
                 version_info["minor"] = tonumber(temp_version[2])
                 version_info["revision"] = tonumber(temp_version[3])
+                version_info["build"] = tonumber(temp_version[4])
             end
         end
 
@@ -100,7 +101,13 @@ local function compare_version(version_1, version_2)
     if (version_1["major"] == version_2["major"]) then
         if (version_1["minor"] == version_2["minor"]) then
             if (version_1["revision"] == version_2["revision"]) then
-                return 0
+                if (version_1["build"] == version_2["build"]) then
+                    return 0
+                elseif (version_1["build"] > version_2["build"]) then
+                    return 1
+                else
+                    return -1
+                end
             elseif (version_1["revision"] > version_2["revision"]) then
                 return 1
             else

@@ -1,10 +1,10 @@
 --[[
 ##name: ]]--
-program_name = "Branch Mining"
+program_name = "am-cc Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-program_version = "1.5.2"
+program_version = "3.5.2.1"
 --[[
 
 ##type: turtle
@@ -1284,7 +1284,7 @@ local function run_turtle_main()
         clear_line()
     end
 
-    for i=3,16 do
+    for i=1,16 do
         if (turtle.getItemCount(i) > 0) then
             test_slots[#test_slots+1] = i
         end
