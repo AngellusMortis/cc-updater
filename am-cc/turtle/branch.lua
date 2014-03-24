@@ -4,7 +4,7 @@ program_name = "Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-program_version = "1.5.1"
+program_version = "1.5.2"
 --[[
 
 ##type: turtle
@@ -585,6 +585,7 @@ local function force_forward(allow_fail)
             update_progress("position", progress["position"][1][1] - 1, 1, 1)
         end
     end
+    return move_success
 end
 -- force turtle to dig (keeps digging until no block)
 local function force_dig_forward(allow_fail)
@@ -647,6 +648,7 @@ local function force_up(allow_fail)
         turtle.suckUp()
         update_progress("position", progress["position"][1][2] + 1, 1, 2)
     end
+    return success
 end
 -- force turtle to dig up (keeps digging until no block)
 local function force_dig_up(allow_fail)
@@ -706,6 +708,7 @@ local function force_down(allow_fail)
         turtle.suckDown()
         update_progress("position", progress["position"][1][2] - 1, 1, 2)
     end
+    return success
 end
 -- force turtle to dig down (keeps digging until no block)
 local function force_dig_down(allow_fail)
@@ -917,10 +920,11 @@ local function dig_ores(movement)
                 get_fuel_and_supplies_if_needed(required_fuel)
                 set_task("Mining Vein", "")
             end
-            force_down(true)
-            movement[#movement+1]=4
-            os.sleep(0.05 * settings["tick_delay"])
-            dig_ores(movement)
+            if (force_down(true)) then
+                movement[#movement+1]=4
+                os.sleep(0.05 * settings["tick_delay"])
+                dig_ores(movement)
+            end
         end
     end
     -- up
@@ -937,10 +941,11 @@ local function dig_ores(movement)
                 get_fuel_and_supplies_if_needed(required_fuel)
                 set_task("Mining Vein", "")
             end
-            force_up(true)
-            movement[#movement+1]=5
-            os.sleep(0.05 * settings["tick_delay"])
-            dig_ores(movement)
+            if (force_up(true)) then
+                movement[#movement+1]=5
+                os.sleep(0.05 * settings["tick_delay"])
+                dig_ores(movement)
+            end
         end
     end
 
@@ -966,10 +971,11 @@ local function dig_ores(movement)
                     get_fuel_and_supplies_if_needed(required_fuel)
                     set_task("Mining Vein", "")
                 end
-                force_forward(true)
-                movement[#movement+1]=get_opposite_direction(v)
-                os.sleep(0.05 * settings["tick_delay"])
-                dig_ores(movement)
+                if (force_forward(true)) then
+                    movement[#movement+1]=get_opposite_direction(v)
+                    os.sleep(0.05 * settings["tick_delay"])
+                    dig_ores(movement)
+                end
             end
         end
     end
