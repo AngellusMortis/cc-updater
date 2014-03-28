@@ -4,11 +4,14 @@ program_name = "am-cc Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-program_version = "3.5.2.3"
+program_version = "3.5.2.4"
 --[[
 
 ##type: turtle
 ##desc: Mines a branch mine with a trunk and 5 branches each divded into two 50 length halves.
+
+##images:
+https://github.com/AngellusMortis/am-cc/tree/master/images/branch.lua
 
 ##detailed:
 By default, creates a branch mine this fashion (by default):
@@ -765,7 +768,7 @@ local function goto_position(coord, facing)
 
     -- move turtle to trunk
     min_trunk = 0
-    max_trunk = (settings["trunk_width"])-1    
+    max_trunk = (settings["trunk_width"])-1
     while (progress["position"][1][1] > max_trunk) do
         rotate(3)
         force_forward()
@@ -774,7 +777,15 @@ local function goto_position(coord, facing)
         rotate(1)
         force_forward()
     end
-    
+
+    -- goto y coord
+    while (progress["position"][1][2] > coord[2]) do
+        force_down()
+    end
+    while (progress["position"][1][2] < coord[2]) do
+        force_up()
+    end
+
     -- goto z coord
     while (progress["position"][1][3] > coord[3]) do
         rotate(0)
@@ -793,14 +804,6 @@ local function goto_position(coord, facing)
     while (progress["position"][1][1] < coord[1]) do
         rotate(1)
         force_forward()
-    end
-
-    -- goto y coord
-    while (progress["position"][1][2] > coord[2]) do
-        force_down()
-    end
-    while (progress["position"][1][2] < coord[2]) do
-        force_up()
     end
 
     -- rotate to facing
