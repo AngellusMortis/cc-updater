@@ -765,7 +765,7 @@ local function goto_position(coord, facing)
 
     -- move turtle to trunk
     min_trunk = 0
-    max_trunk = settings(["trunk_width"])-1    
+    max_trunk = (settings["trunk_width"])-1    
     while (progress["position"][1][1] > max_trunk) do
         rotate(3)
         force_forward()
