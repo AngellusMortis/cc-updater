@@ -4,7 +4,7 @@ program_name = "am-cc Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-program_version = "3.5.2.5"
+program_version = "3.5.2.6"
 --[[
 
 ##type: turtle
@@ -737,8 +737,10 @@ end
 -- uses all fuel in inventory
 local function use_all_fuel()
     for i=1,16 do
-        turtle.select(i)
-        turtle.refuel(64)
+        if not (i == settings["torch_slot"]) then
+            turtle.select(i)
+            turtle.refuel(64)
+        end
     end
 end
 -- moves turtle to coords and facing direction
