@@ -4,7 +4,7 @@ program_name = "am-cc Updater"
 --[[
 ##file: am/programs/update.lua
 ##version: ]]--
-program_version = "5.0.0.2"
+program_version = "5.0.0.3"
 --[[
 
 ##type: program
@@ -150,7 +150,7 @@ local function main()
                 end
                 handle = fs.open(base_path..folder.."/"..file_info["file"], "w")
                 if (handle) then
-                    handle.write(http.get(update_url..update_path..base_path..folder.."/"..file_info["file"]..".lua").readAll())
+                    handle.write(http.get(update_url..update_path..base_path..folder.."/"..file_info["file"]..".lua?random="..math.random(1, 1000000)).readAll())
                     handle.close()
                     fs.delete(base_path..folder.."/"..file_info["file"]..".bak")
                 else
