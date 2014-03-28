@@ -4,7 +4,7 @@ program_name = "am-cc Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-program_version = "3.5.2.1"
+program_version = "3.5.2.2"
 --[[
 
 ##type: turtle
@@ -68,7 +68,6 @@ Down: 5
 
 ##planned:
 #save/resume feature
-#automated updates
 #liquids
 
 ##issues:
@@ -734,6 +733,7 @@ end
 -- uses all fuel in inventory
 local function use_all_fuel()
     for i=1,16 do
+        turtle.select(i)
         turtle.refuel(64)
     end
 end
@@ -810,16 +810,19 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
     local previous_position = {{progress["position"][1][1], progress["position"][1][2], progress["position"][1][3]}, progress["position"][2]}
     local has_moved = false
     if (turtle.getFuelLevel() < required_fuel) then
+        if (required_fuel < settings["min_continue_fuel_level"]) then
+            required_fuel = settings["min_continue_fuel_level"]
+        end
         has_moved = true
         set_task("Supplies", "Fuel")
         goto_position({(settings["trunk_width"]-1), 0, 0}, 1)
-        need_fuel = (turtle.getFuelLevel() < settings["min_continue_fuel_level"])
+        need_fuel = (turtle.getFuelLevel() < required_fuel)
         while (need_fuel) do
             if not (turtle.suck()) then
                 print_error(message_error_fuel)
             end
             use_all_fuel()
-            need_fuel = (turtle.getFuelLevel() < settings["min_continue_fuel_level"])
+            need_fuel = (turtle.getFuelLevel() < required_fuel)
         end
     end
 
