@@ -4,7 +4,7 @@ program_name = "am-cc Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-program_version = "3.5.2.2"
+program_version = "3.5.2.3"
 --[[
 
 ##type: turtle
@@ -763,16 +763,18 @@ local function goto_position(coord, facing)
         force_forward()
     end
 
-    -- goto x coord
-    while (progress["position"][1][1] > coord[1]) do
+    -- move turtle to trunk
+    min_trunk = 0
+    max_trunk = settings(["trunk_width"])-1    
+    while (progress["position"][1][1] > max_trunk) do
         rotate(3)
         force_forward()
     end
-    while (progress["position"][1][1] < coord[1]) do
+    while (progress["position"][1][1] < min_trunk) do
         rotate(1)
         force_forward()
     end
-
+    
     -- goto z coord
     while (progress["position"][1][3] > coord[3]) do
         rotate(0)
@@ -780,6 +782,16 @@ local function goto_position(coord, facing)
     end
     while (progress["position"][1][3] < coord[3]) do
         rotate(2)
+        force_forward()
+    end
+
+    -- goto x coord
+    while (progress["position"][1][1] > coord[1]) do
+        rotate(3)
+        force_forward()
+    end
+    while (progress["position"][1][1] < coord[1]) do
+        rotate(1)
         force_forward()
     end
 
@@ -866,7 +878,7 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
     if not empty_slots then
         has_moved = true
         set_task("Supplies", "Emptying")
-        goto_position({progress["branch"]["side"]-1, 1, settings["branch_between_distance"]*progress["branch"]["current"]}, 2)
+        goto_position({progress["branch"]["side"]-1, 1, ((settings["branch_between_distance"]+1)*progress["branch"]["current"])-1}, 2)
         empty_inventory()
     end
 

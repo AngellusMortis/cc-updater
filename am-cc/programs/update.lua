@@ -4,7 +4,7 @@ program_name = "am-cc Updater"
 --[[
 ##file: am/programs/update.lua
 ##version: ]]--
-program_version = "5.0.0.1"
+program_version = "5.0.0.2"
 --[[
 
 ##type: program
@@ -54,7 +54,7 @@ local function split(str, pat)
 end
 
 local function get_update_data()
-    local response = textutils.unserialize(http.get(update_url).readAll())
+    local response = textutils.unserialize(http.get(update_url.."?random="..math.random(1, 1000000)).readAll())
     if not response["success"] then
         error("Update failed: "..response["error"])
     end
@@ -126,6 +126,7 @@ local function compare_version(version_1, version_2)
 end
 
 local function main()
+    math.randomseed(os.time() * 1024 % 46)
     term.clear()
     term.setCursorPos(1,1)
     print("Getting file data...")
