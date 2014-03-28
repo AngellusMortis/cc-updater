@@ -737,7 +737,7 @@ end
 -- uses all fuel in inventory
 local function use_all_fuel()
     for i=1,16 do
-        if not (i == settings["torch_slot"]) then
+        if not (i == settings["chest_slot"]) then
             turtle.select(i)
             turtle.refuel(64)
         end
