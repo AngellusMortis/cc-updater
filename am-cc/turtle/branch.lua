@@ -4,7 +4,7 @@ program_name = "am-cc Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-program_version = "3.5.2.4"
+program_version = "3.5.2.5"
 --[[
 
 ##type: turtle
@@ -464,6 +464,7 @@ print_error = function (error_message, fatal, wait)
     if (not (turtle == nil)) and (settings["transmit_progress"]) then
         local error_data = {}
         error_data["error"] = error_message
+        error_data["wait"] = wait
         send_message("error", error_data)
     end
 
@@ -1500,7 +1501,7 @@ local function run_receiver_main()
                 clear_line()
             -- print error
             else
-                print_error(receiver_data["error"])
+                print_error(receiver_data["error"], false, receiver_data["wait"])
             end
             retransmit = true
         -- exit event
