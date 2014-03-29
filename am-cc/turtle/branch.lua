@@ -4,7 +4,7 @@ program_name = "am-cc Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-program_version = "3.5.2.6"
+program_version = "3.5.2.7"
 --[[
 
 ##type: turtle
@@ -781,12 +781,9 @@ local function goto_position(coord, facing)
         force_forward()
     end
 
-    -- goto y coord
+    -- goto y coord (down)
     while (progress["position"][1][2] > coord[2]) do
         force_down()
-    end
-    while (progress["position"][1][2] < coord[2]) do
-        force_up()
     end
 
     -- goto z coord
@@ -807,6 +804,11 @@ local function goto_position(coord, facing)
     while (progress["position"][1][1] < coord[1]) do
         rotate(1)
         force_forward()
+    end
+
+    -- goto y coord (up)
+    while (progress["position"][1][2] < coord[2]) do
+        force_up()
     end
 
     -- rotate to facing
@@ -857,8 +859,7 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
         while (need_chests) do
             set_task("Supplies", "Chests")
             turtle.select(settings["chest_slot"])
-            turtle.dropUp()
-            turtle.suckUp()
+            turtle.suckUp(64-turtle.getItemCount(settings["chest_slot"]))
             need_chests = (turtle.getItemCount(settings["chest_slot"]) <= 1)
             if (need_chests) then
                 print_error(message_error_chest)
@@ -868,8 +869,7 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
         while (need_torches) do
             set_task("Supplies", "Torches")
             turtle.select(settings["torch_slot"])
-            turtle.drop()
-            turtle.suck()
+            turtle.suck(64-turtle.getItemCount(settings["torch_slot"]))
             need_torches = (turtle.getItemCount(settings["torch_slot"]) <= (((settings["branch_length"]/settings["torch_distance"])+1)*2))
             if (need_torches) then
                 print_error(message_error_torch)
