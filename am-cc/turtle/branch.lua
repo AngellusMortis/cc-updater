@@ -4,7 +4,7 @@ program_name = "am-cc Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-program_version = "3.5.2.7"
+program_version = "3.5.2.8"
 --[[
 
 ##type: turtle
@@ -1444,6 +1444,7 @@ local function run_receiver_main()
             replyChannel, message, senderDistance = os.pullEvent("modem_message")
 
         local retransmit = false
+        local is_error = false
 
         local receiver_data = textutils.unserialize(message)
         receiver_data["retransmit_id"] = receiver_data["retransmit_id"] or nil
@@ -1503,7 +1504,8 @@ local function run_receiver_main()
                 clear_line()
             -- print error
             else
-                print_error(receiver_data["error"], false, receiver_data["wait"])
+                -- make suire the retransmitter runs first
+                is_error = true
             end
             retransmit = true
         -- exit event
@@ -1515,6 +1517,10 @@ local function run_receiver_main()
         if (settings["transmit_progress"] and retransmit) then
             receiver_data["retransmit_id"] = nil
             send_message(receiver_data["type"], receiver_data)
+        end
+
+        if (is_error) then
+            print_error(receiver_data["error"], false, receiver_data["wait"])
         end
     end
     transmitter.close(settings["transmit_channel"])
