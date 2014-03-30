@@ -4,7 +4,7 @@ program_name = "am-cc Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-program_version = "3.5.2.8"
+program_version = "3.6.0.0"
 --[[
 
 ##type: turtle
@@ -76,13 +76,7 @@ Down: 5
 ##issues:
 
 ##parameters:
-args[1]: display to redirect to (side or name) (default: nil) enter "false" to disable redirection
-args[2]: Use collected coal as fuel (default: false)
-args[3]: Number of branches
-args[4]: Number of blocks between each branch (default: 2)
-args[5]: Length of branch in blocks (default: 52)
-args[6]: distance between torches (default: 10)
-args[7]: Number of blocks between connections between branches (default: 26)
+args[1]: force start without opening on new tab
 
 --]]
 
@@ -201,6 +195,9 @@ init_settings = function()
     --save/load functionaility
     -- WIP, do NOT use
     settings["allow_resume"] = setting_or_default("allow_resume", false)
+
+    -- multitask stuff
+    settings["do_multitask"] = settings_or_default("do_multitask", not (shell.openTab == nil))
 
     write_settings()
 
@@ -1537,12 +1534,17 @@ end
 
 local function main()
     init_settings()
-    init_progress()
-    fs.delete(log_file)
-    if not (turtle == nil) then
-        run_turtle_main()
+
+    if (not args[1]) and settings["do_multitask"] then
+        shell.openTab("branch", "true")
     else
-        run_receiver_main()
+        init_progress()
+        fs.delete(log_file)
+        if not (turtle == nil) then
+            run_turtle_main()
+        else
+            run_receiver_main()
+        end
     end
 end
 
