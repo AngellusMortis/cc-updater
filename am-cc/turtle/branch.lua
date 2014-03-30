@@ -4,7 +4,7 @@ program_name = "am-cc Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-program_version = "3.6.0.2"
+program_version = "3.6.0.3"
 --[[
 
 ##type: turtle
@@ -1536,7 +1536,7 @@ local function main()
     init_settings()
 
     if (not args[1]) and settings["do_multitask"] then
-        shell.openTab("branch", true)
+        shell.openTab("branch", "true")
     else
         init_progress()
         fs.delete(log_file)
