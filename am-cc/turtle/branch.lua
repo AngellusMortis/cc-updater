@@ -4,7 +4,7 @@ program_name = "am-cc Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-program_version = "3.6.0.1"
+program_version = "3.6.0.2"
 --[[
 
 ##type: turtle
@@ -197,7 +197,7 @@ init_settings = function()
     settings["allow_resume"] = setting_or_default("allow_resume", false)
 
     -- multitask stuff
-    settings["do_multitask"] = settings_or_default("do_multitask", not (shell.openTab == nil))
+    settings["do_multitask"] = setting_or_default("do_multitask", not (shell.openTab == nil))
 
     write_settings()
 
