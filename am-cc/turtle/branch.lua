@@ -4,7 +4,7 @@ program_name = "am-cc Branch Mining"
 --[[
 ##file: am/turtle/branch.lua
 ##version: ]]--
-program_version = "3.6.0.3"
+program_version = "3.6.0.4"
 --[[
 
 ##type: turtle
@@ -881,7 +881,11 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
     if not empty_slots then
         has_moved = true
         set_task("Supplies", "Emptying")
-        goto_position({progress["branch"]["side"]-1, 1, ((settings["branch_between_distance"]+1)*progress["branch"]["current"])-1}, 2)
+        drop_off_x = 0
+        if (progress["branch"]["side"] == 2) then
+           drop_off_x = (settings["trunk_width"])-1
+        end
+        goto_position({drop_off_x, 1, ((settings["branch_between_distance"]+1)*progress["branch"]["current"])-1}, 2)
         empty_inventory()
     end
 
