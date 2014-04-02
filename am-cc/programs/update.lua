@@ -4,7 +4,7 @@ program_name = "am-cc Updater"
 --[[
 ##file: am/programs/update.lua
 ##version: ]]--
-program_version = "5.1.0.0"
+program_version = "5.1.0.1"
 --[[
 
 ##type: program
