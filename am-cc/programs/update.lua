@@ -166,7 +166,7 @@ local function main()
     print("Getting file data...")
     local update_data = get_update_data()
 
-    check_for_updates(data, base_path)
+    check_for_updates(update_data, base_path)
 end
 
 main()
