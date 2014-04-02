@@ -4,7 +4,7 @@ program_name = "am-cc Updater"
 --[[
 ##file: am/programs/update.lua
 ##version: ]]--
-program_version = "5.0.0.3"
+program_version = "5.1.0.0"
 --[[
 
 ##type: program
@@ -125,40 +125,48 @@ local function compare_version(version_1, version_2)
     end
 end
 
+local function check_for_updates(data, path)
+    check_path_for_folders(base_path..path)
+    for index,value in pairs(data) do
+        if not (tonumber(index) == nil) then
+            print("Checking: "..base_path..path.."/"..value["file"])
+            local do_update = true
+            if (fs.exists(base_path..path.."/"..value["file"])) then
+                file_version = get_version_info(base_path..path.."/"..value["file"])
+                if not (compare_version(value["version"], file_version) == 1) then
+                    do_update = false
+                end
+            end
+
+            if (do_update) then
+                print("Updating: "..base_path..path.."/"..value["file"])
+                if (fs.exists(base_path..path.."/"..value["file"])) then
+                    fs.move(base_path..path.."/"..value["file"], base_path..path.."/"..value["file"]..".bak")
+                end
+                handle = fs.open(base_path..path.."/"..value["file"], "w")
+                if (handle) then
+                    handle.write(http.get(update_url..update_path..base_path..path.."/"..value["file"]..".lua?random="..math.random(1, 1000000)).readAll())
+                    handle.close()
+                    fs.delete(base_path..path.."/"..value["file"]..".bak")
+                else
+                    fs.move(base_path..path.."/"..value["file"]..".bak", base_path..path.."/"..value["file"])
+                    error("Failed to update: "..base_path..path.."/"..value["file"])
+                end
+            end
+        else
+            check_for_updates(value, index)
+        end
+    end
+end
+
 local function main()
     math.randomseed(os.time() * 1024 % 46)
     term.clear()
     term.setCursorPos(1,1)
     print("Getting file data...")
     local update_data = get_update_data()
-    for folder,files in pairs(update_data) do
-        check_path_for_folders(base_path..folder)
-        for index,file_info in pairs(files) do
-            print("Checking: "..base_path..folder.."/"..file_info["file"])
-            do_update = true
-            if (fs.exists(base_path..folder.."/"..file_info["file"])) then
-                file_version = get_version_info(base_path..folder.."/"..file_info["file"])
-                if not (compare_version(file_info["version"], file_version) == 1) then
-                    do_update = false
-                end
-            end
 
-            if (do_update) then
-                print("Updating: "..base_path..folder.."/"..file_info["file"])
-                if (fs.exists(base_path..folder.."/"..file_info["file"])) then
-                    fs.move(base_path..folder.."/"..file_info["file"], base_path..folder.."/"..file_info["file"]..".bak")
-                end
-                handle = fs.open(base_path..folder.."/"..file_info["file"], "w")
-                if (handle) then
-                    handle.write(http.get(update_url..update_path..base_path..folder.."/"..file_info["file"]..".lua?random="..math.random(1, 1000000)).readAll())
-                    handle.close()
-                    fs.delete(base_path..folder.."/"..file_info["file"]..".bak")
-                else
-                    error("Failed to update: "..base_path..folder.."/"..file_info["file"])
-                end
-            end
-        end
-    end
+    check_for_updates(data, base_path)
 end
 
 main()
