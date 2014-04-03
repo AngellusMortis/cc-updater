@@ -2,7 +2,7 @@
 ##name:
 ##file: am-cc/programs/turtle/branch.lua
 ##version: ]]--
-program_version = "3.7.0.1"
+program_version = "3.7.0.2"
 --[[
 
 ##type: turtle
@@ -434,13 +434,13 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
         goto_position({(branch.settings["trunk_width"]-1), 0, 0}, 1)
         need_fuel = (turtle.getFuelLevel() < required_fuel)
         while (need_fuel) do
+            turtle.select(12)
             if not (turtle.suck()) then
                 branch.print_error(branch.message_error_fuel)
             end
             use_all_fuel()
             need_fuel = (turtle.getFuelLevel() < required_fuel)
         end
-        use_all_fuel()
     end
 
     -- check torches/chests
