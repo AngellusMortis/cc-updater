@@ -2,7 +2,7 @@
 ##name:
 ##file: am-cc/programs/computer/branch.lua
 ##version: ]]--
-program_version = "3.7.0.0"
+program_version = "3.7.0.1"
 --[[
 
 ##type: turtle
@@ -28,13 +28,13 @@ if (fs.exists("/disk/am-cc")) then
 end
 
 -- load shared code
-os.loadAPI(base_path.."am-cc/core/branch")
+local branch = loadfile(base_path.."am-cc/core/branch")()
 
 local args = { ... }
 
 local function main()
     branch.init_progress()
-    fs.delete(log_file)
+    fs.delete(branch.log_file)
 
     local term_object = term
 
@@ -79,14 +79,14 @@ local function main()
         end
     end
 
-    term_size = {term.getSize()}
+    local term_size = {term.getSize()}
 
     -- print title
     term.clear()
     term.setCursorPos(1,1)
     title = branch.program_name.." v"..program_version
     if (term_size[1] < string.len(title)+17) then
-        ids_line = 2
+        branch.ids_line = 2
         if (term_size[1] < string.len(title)) or (term_size[1] < 17) then
             branch.print_error(branch.message_error_display_width, true)
         end
@@ -94,13 +94,13 @@ local function main()
     if (term_size[2] < 12) then
         branch.print_error(branch.message_error_display_height, true)
     end
-    local current_branch_location = {term_size[1]-9,ids_line+2}
+    local current_branch_location = {term_size[1]-9,branch.ids_line+2}
     branch.color_write(title, colors.lime)
-    term.setCursorPos(1,ids_line+2)
+    term.setCursorPos(1,branch.ids_line+2)
     branch.color_write("Waiting for turtle...", colors.magenta)
 
     -- open channel for listening
-    transmitter.open(branch.settings["transmit_channel"])
+    branch.transmitter.open(branch.settings["transmit_channel"])
     -- listen for events
     local do_loop = true
     while (do_loop) do
@@ -117,16 +117,16 @@ local function main()
         branch.log("receive: "..temp_seralized)
 
         -- start event, can only be ran if waiting for turtle (paired_id == nil)
-        if (receiver_data["type"] == "start") and (progress["paired_id"] == nil) then
+        if (receiver_data["type"] == "start") and (branch.progress["paired_id"] == nil) then
             branch.update_progress("paired_id", receiver_data["turtle_id"])
             branch.update_progress("retransmit_id", receiver_data["retransmit_id"])
             branch.update_progress("branch", receiver_data["branch"] or branch.progress["branch"]["current"], "current")
             branch.settings["number_of_branches"] = receiver_data["number_of_branches"]
 
             if not (branch.progress["retransmit_id"] == nil) then
-                term.setCursorPos(term_size[1]-16,ids_line)
+                term.setCursorPos(term_size[1]-16,branch.ids_line)
             else
-                term.setCursorPos(term_size[1]-10,ids_line)
+                term.setCursorPos(term_size[1]-10,branch.ids_line)
             end
             branch.color_write(string.format("%5d", os.computerID()), colors.white)
             branch.color_write(":", colors.yellow)
@@ -136,19 +136,19 @@ local function main()
             end
             branch.color_write(string.format("%5d", branch.progress["paired_id"]), colors.red)
 
-            term.setCursorPos(1,ids_line+2)
+            term.setCursorPos(1,branch.ids_line+2)
             branch.clear_line()
             branch.color_write("Current Branch", colors.cyan)
             term.setCursorPos(unpack(current_branch_location))
             branch.color_write(string.format("%3d", branch.progress["branch"]["current"]), colors.yellow)
-            term.setCursorPos(term_size[1]-5,ids_line+2)
+            term.setCursorPos(term_size[1]-5,branch.ids_line+2)
             branch.color_write("of", colors.white)
-            term.setCursorPos(term_size[1]-2,ids_line+2)
+            term.setCursorPos(term_size[1]-2,branch.ids_line+2)
             branch.color_write(string.format("%3d", branch.settings["number_of_branches"]), colors.magenta)
             retransmit = true
         -- branch_update event
         elseif (receiver_data["type"] == "branch_update") and (branch.progress["paired_id"] == receiver_data["turtle_id"]) and (branch.progress["retransmit_id"] == receiver_data["retransmit_id"]) then
-            update_progress("branch", receiver_data["branch"], "current")
+            branch.update_progress("branch", receiver_data["branch"], "current")
             term.setCursorPos(unpack(current_branch_location))
             branch.color_write(string.format("%3d", branch.progress["branch"]["current"]), colors.yellow)
             branch.send_confrim(receiver_data["turtle_id"])
@@ -178,7 +178,7 @@ local function main()
             retransmit = true
         end
 
-        if (settings["transmit_progress"] and retransmit) then
+        if (branch.settings["transmit_progress"] and retransmit) then
             receiver_data["retransmit_id"] = nil
             branch.send_message(receiver_data["type"], receiver_data)
         end
@@ -199,7 +199,7 @@ local function main()
     end
 end
 
-if (not args[1]) and settings["do_multitask"] then
+if (not args[1]) and branch.settings["do_multitask"] then
     shell.openTab("branch", "true")
 else
     main()
