@@ -1,8 +1,9 @@
+local args = { ... }
 --[[
 ##name:
 ##file: am-cc/programs/turtle/branch.lua
 ##version: ]]--
-program_version = "3.7.0.2"
+version = "3.7.1.0"
 --[[
 
 ##type: turtle
@@ -78,21 +79,29 @@ args[1]: force start without opening on new tab
 
 --]]
 
-local base_path = "/"
-
-if (fs.exists("/disk/am-cc")) then
-    base_path = "/disk/"
-end
-
--- load shared code
-local branch = loadfile(base_path.."am-cc/core/branch")()
-
-local args = { ... }
-
-local empty_inventory = nil
+get_opposite_direction = nil
+rotate = nil
+detect_liquid_forward = nil
+force_forward = nil
+force_dig_forward = nil
+detect_liquid_up = nil
+force_up = nil
+force_dig_up = nil
+detect_liquid_down = nil
+force_down = nil
+force_dig_down = nil
+use_all_fuel = nil
+goto_position = nil
+get_distance_from_fuel = nil
+get_fuel_amount_for_branch = nil
+get_fuel_and_supplies_if_needed = nil
+empty_inventory = nil
+dig_ores = nil
+dig_out_trunk = nil
+dig_branch = nil
 
 -- opposite direction
-local function get_opposite_direction(direction)
+get_opposite_direction = function(direction)
     if (direction == 0) then
         return 2
     elseif (direction == 1) then
@@ -111,7 +120,7 @@ end
 
 -- turtle functions
 -- rotate turtle and update progress["position"]
-local function rotate(direction)
+rotate = function(direction)
     local offset = direction - branch.progress["position"][2]
     branch.update_progress("position", direction, 2)
     if (offset == 0) then
@@ -126,11 +135,11 @@ local function rotate(direction)
     end
 end
 -- only works in CC1.6
-local function detect_liquid_forward()
+detect_liquid_forward = function()
     if (turtle.detect()) then
         turtle.select(branch.settings["cobblestone_slot"])
         if (turtle.place()) then
-            branch.print_error(branch.message_error_liquids)
+            core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.liquids.." (forward)")
         end
     end
 end
@@ -139,7 +148,7 @@ end
 --  digs anything out of the way
 --  can generate error if unable to move after 10 tries and block in front or 50 tries (mob)
 --  updates progress["position"]
-local function force_forward(allow_fail)
+force_forward = function(allow_fail)
     allow_fail = allow_fail or false
     count = 0
     detect_liquid_forward()
@@ -154,7 +163,7 @@ local function force_forward(allow_fail)
             if (allow_fail) then
                 break
             end
-            branch.print_error(branch.message_error_move)
+            core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.move)
             count = 0
         end
         os.sleep(0.05 * branch.settings["tick_delay"])
@@ -187,7 +196,7 @@ local function force_forward(allow_fail)
     return move_success
 end
 -- force turtle to dig (keeps digging until no block)
-local function force_dig_forward(allow_fail)
+force_dig_forward = function(allow_fail)
     allow_fail = allow_fail or false
     count = 0
     detect_liquid_forward()
@@ -203,7 +212,7 @@ local function force_dig_forward(allow_fail)
             if (allow_fail) then
                 break
             end
-            branch.print_error(branch.message_error_dig.." (forward)")
+            core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.dig.." (forward)")
             count = 0
         end
         os.sleep(0.5 * branch.settings["tick_delay"])
@@ -211,11 +220,11 @@ local function force_dig_forward(allow_fail)
     end
 end
 -- only works in CC1.6
-local function detect_liquid_up()
+detect_liquid_up = function()
     if (turtle.detectUp()) then
         turtle.select(branch.settings["cobblestone_slot"])
         if (turtle.placeUp()) then
-            branch.print_error(branch.message_error_liquids)
+            core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.liquids.." (up)")
         end
     end
 end
@@ -223,7 +232,7 @@ end
 --  digs anything out of the way
 --  can generate error if unable to move after 10 tries
 --  updates progress["position"]
-local function force_up(allow_fail)
+force_up = function(allow_fail)
     allow_fail = allow_fail or false
     count = 0
     detect_liquid_up()
@@ -236,7 +245,7 @@ local function force_up(allow_fail)
             if (allow_fail) then
                 break
             end
-            branch.print_error(branch.message_error_move)
+            core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.move)
             count = 0
         end
         os.sleep(0.5 * branch.settings["tick_delay"])
@@ -250,7 +259,7 @@ local function force_up(allow_fail)
     return success
 end
 -- force turtle to dig up (keeps digging until no block)
-local function force_dig_up(allow_fail)
+force_dig_up = function(allow_fail)
     allow_fail = allow_fail or false
     count = 0
     detect_liquid_up()
@@ -263,7 +272,7 @@ local function force_dig_up(allow_fail)
             if (allow_fail) then
                 break
             end
-            branch.print_error(branch.message_error_dig.." (up)")
+            core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.dig.." (up)")
             count = 0
         end
         os.sleep(0.5 * branch.settings["tick_delay"])
@@ -271,11 +280,11 @@ local function force_dig_up(allow_fail)
     end
 end
 -- only works in CC1.6
-local function detect_liquid_down()
+detect_liquid_down = function()
     if (turtle.detectDown()) then
         turtle.select(branch.settings["cobblestone_slot"])
         if (turtle.placeDown()) then
-            branch.print_error(branch.message_error_liquids)
+            core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.liquids.." (down)")
         end
     end
 end
@@ -283,7 +292,7 @@ end
 --  digs anything out of the way
 --  can generate error if unable to move after 10 tries
 --  updates progress["position"]
-local function force_down(allow_fail)
+force_down = function(allow_fail)
     allow_fail = allow_fail or false
     count = 0
     detect_liquid_down()
@@ -296,7 +305,7 @@ local function force_down(allow_fail)
             if (allow_fail) then
                 break
             end
-            branch.print_error(branch.message_error_move)
+            core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.move)
             count = 0
         end
         os.sleep(0.5 * branch.settings["tick_delay"])
@@ -310,7 +319,7 @@ local function force_down(allow_fail)
     return success
 end
 -- force turtle to dig down (keeps digging until no block)
-local function force_dig_down(allow_fail)
+force_dig_down = function(allow_fail)
     allow_fail = allow_fail or false
     count = 0
     detect_liquid_down()
@@ -323,7 +332,7 @@ local function force_dig_down(allow_fail)
             if (allow_fail) then
                 break
             end
-            branch.print_error(branch.message_error_dig.." (down)")
+            core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.dig.." (down)")
             count = 0
         end
         os.sleep(0.5 * branch.settings["tick_delay"])
@@ -331,7 +340,7 @@ local function force_dig_down(allow_fail)
     end
 end
 -- uses all fuel in inventory
-local function use_all_fuel()
+use_all_fuel = function()
     for i=1,16 do
         if not (i == branch.settings["chest_slot"]) then
             turtle.select(i)
@@ -341,9 +350,9 @@ local function use_all_fuel()
 end
 -- moves turtle to coords and facing direction
 --   allows for both negative and positive coords for X and Y, but NOT Z
-local function goto_position(coord, facing)
+goto_position = function(coord, facing)
     temp_seralized = string.gsub(textutils.serialize({coord, facing}), "[\n ]", "")
-    branch.log("goto: "..temp_seralized)
+    core.log(branch, core.strings.levels.debug, "goto: "..temp_seralized)
     -- move turtle out of branch connector if in one
     local branchs_z = {branch.settings["branch_between_distance"]}
     for i=2,branch.settings["number_of_branches"] do
@@ -411,15 +420,15 @@ local function goto_position(coord, facing)
     rotate(facing)
 end
 -- calculate the distance from the fuel chest
-local function get_distance_from_fuel()
+get_distance_from_fuel = function()
     -- fuel position is (trunk_width-1, 0, 0)
     return math.abs(branch.progress["position"][1][1]-(branch.settings["trunk_width"]-1))+math.abs(branch.progress["position"][1][2])+math.abs(branch.progress["position"][1][3])
 end
-local function get_fuel_amount_for_branch()
+get_fuel_amount_for_branch = function()
     return get_distance_from_fuel() + ((branch.settings["branch_length"] + (branch.settings["branch_length"]/branch.settings["branch_connector_distance"])*(branch.settings["branch_between_distance"]*2))*2 + branch.settings["trunk_width"])*2
 end
 -- test if it is nesscary to get resources
-local function get_fuel_and_supplies_if_needed(required_fuel)
+get_fuel_and_supplies_if_needed = function(required_fuel)
     branch.set_task("Supplies", "Checking")
 
     -- check fuel
@@ -436,7 +445,7 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
         while (need_fuel) do
             turtle.select(12)
             if not (turtle.suck()) then
-                branch.print_error(branch.message_error_fuel)
+                core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.fuel)
             end
             use_all_fuel()
             need_fuel = (turtle.getFuelLevel() < required_fuel)
@@ -459,7 +468,7 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
             turtle.suckUp(64-turtle.getItemCount(branch.settings["chest_slot"]))
             need_chests = (turtle.getItemCount(branch.settings["chest_slot"]) <= 1)
             if (need_chests) then
-                branch.print_error(branch.message_error_chest)
+                core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.chest)
             end
         end
         -- resupply torches
@@ -469,7 +478,7 @@ local function get_fuel_and_supplies_if_needed(required_fuel)
             turtle.suck(64-turtle.getItemCount(branch.settings["torch_slot"]))
             need_torches = (turtle.getItemCount(branch.settings["torch_slot"]) <= (((branch.settings["branch_length"]/branch.settings["torch_distance"])+1)*2))
             if (need_torches) then
-                branch.print_error(branch.message_error_torch)
+                core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.torch)
             end
         end
     end
@@ -521,7 +530,7 @@ end
 -- check for ores and mine them if they are there
 --   will mine out anything that is not stone, dirt, gravel, or cobblestone
 --   if do_down, will check block below turtle, otherwise, will check block above
-local function dig_ores(movement)
+dig_ores = function(movement)
     movement = movement or {}
 
     local previous_face = nil
@@ -622,8 +631,8 @@ local function dig_ores(movement)
     end
 end
 -- digs out part of trunk of length
-local function dig_out_trunk(length)
-    branch.log("trunk: "..length)
+dig_out_trunk = function(length)
+    core.log(branch, core.strings.levels.debug, "trunk: "..length)
     -- check for needed supplies
     required_fuel = get_fuel_amount_for_branch()
     get_fuel_and_supplies_if_needed(required_fuel)
@@ -666,7 +675,7 @@ local function dig_out_trunk(length)
     end
 end
 -- digs out a single branch
-local function dig_branch()
+dig_branch = function()
     -- check for needed supplies
     required_fuel = get_distance_from_fuel() + ((branch.settings["branch_length"] + (branch.settings["branch_length"]/branch.settings["branch_connector_distance"])*(branch.settings["branch_between_distance"]*2))*2 + branch.settings["trunk_width"])*2
     get_fuel_and_supplies_if_needed(required_fuel)
@@ -697,7 +706,7 @@ local function dig_branch()
                     force_down()
                     turtle.select(branch.settings["chest_slot"])
                     while not (turtle.placeUp()) do
-                        branch.print_error(branch.message_error_failed_to_place_chest)
+                        core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.failed_to_place_chest)
                         turtle.select(branch.settings["chest_slot"])
                     end
                 else
@@ -736,11 +745,11 @@ local function dig_branch()
 
                 -- verfiy blocks are in place for torches (placed later)
                 if (((i%branch.settings["torch_distance"]) == 1)) then
-                    branch.log("branch: place: torch wall")
+                    core.log(branch, core.strings.levels.debug, "branch: place: torch wall")
                     if (branch.has_error) then
                         term_size = {term.getSize()}
                         term.setCursorPos(1, (term_size[2]-2))
-                        branch.clear_line()
+                        core.text.clear_line()
                         branch.has_error = false
                     end
                     if (branch.settings["transmit_progress"]) then
@@ -753,7 +762,7 @@ local function dig_branch()
                             turtle.placeUp()
                             turtle.place()
                         else
-                            branch.print_error(branch.message_error_failed_to_place_torch_wall, false, false)
+                            core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.failed_to_place_torch_wall, false, false)
                         end
                     end
                     if (x == 1) then
@@ -785,11 +794,11 @@ local function dig_branch()
 
             -- place torches
             if (i%branch.settings["torch_distance"]) == 1 then
-                branch.log("branch: place: torch")
+                core.log(branch, core.strings.levels.debug, "branch: place: torch")
                 if (branch.has_error) then
                     term_size = {term.getSize()}
                     term.setCursorPos(1, (term_size[2]-2))
-                    branch.clear_line()
+                    core.text.clear_line()
                     branch.has_error = false
                 end
                 if (branch.settings["transmit_progress"]) then
@@ -797,7 +806,7 @@ local function dig_branch()
                 end
                 turtle.select(branch.settings["torch_slot"])
                 if not (turtle.placeUp()) then
-                    branch.print_error(branch.message_error_failed_to_place_torch, false, false)
+                    core.text.print_error(branch, core.strings.levels.error, branch.strings.error.failed_to_place_torch, false, false)
                 end
             end
         end
@@ -810,7 +819,7 @@ local function dig_branch()
         end
         turtle.select(branch.settings["chest_slot"])
         while not (turtle.compareUp()) do
-            branch.print_error(branch.message_error_no_chest)
+            core.text.print_error(branch, core.strings.levels.error, branch.strings.error.no_chest)
         end
         -- empty out inventory (except for supplies)
         empty_inventory()
@@ -840,13 +849,19 @@ local function dig_branch()
     rotate(2)
 end
 
-local function main()
+local main = function()
+    -- change version from core
+    branch.core = {}
+    branch.core.version = branch.version
+    branch.version = version
+
+    -- init progress
     branch.init_progress()
     fs.delete(branch.log_file)
 
     -- verify trunk height (program not adjusted for otherwise)
     if not (branch.settings["trunk_height"]==2 or branch.settings["trunk_height"]==3) then
-        branch.print_error(branch.message_error_trunk)
+        core.text.print_error(branch, core.strings.levels.error, branch.strings.error.trunk)
     end
     -- check for wireless modem, disable transmit if not there
     if (branch.settings["transmit_progress"]) then
@@ -865,11 +880,11 @@ local function main()
     local current_branch_location = {term_size[1]-9,branch.ids_line+2}
     term.clear()
     term.setCursorPos(1,1)
-    branch.color_write(branch.program_name.." v"..program_version, colors.lime)
+    core.text.color_write(branch.name.." v"..branch.version, colors.lime)
     -- if transmit, print computer ID to indicate it
     if (branch.settings["transmit_progress"]) then
         term.setCursorPos(term_size[1]-4,branch.ids_line)
-        branch.color_write(string.format("%5d", os.computerID()), colors.white)
+        core.text.color_write(string.format("%5d", os.computerID()), colors.white)
     end
 
     -- if no progress, start new
@@ -879,39 +894,39 @@ local function main()
             use_all_fuel()
             if (turtle.getFuelLevel() == 0) then
                 term.setCursorPos(1,branch.ids_line+3)
-                branch.color_write("Put at least one piece of fuel in", colors.cyan)
-                branch.wait_for_enter()
+                core.text.color_write("Put at least one piece of fuel in", colors.cyan)
+                core.text.wait_for_enter()
                 term.setCursorPos(1,branch.ids_line+3)
-                branch.clear_line()
+                core.text.clear_line()
             end
         end
 
         -- remind use to have stone, dirt, gravel, and cobblestone
         term.setCursorPos(1,branch.ids_line+3)
-        branch.color_write("Leave slots 1 and 2 empty", colors.cyan)
+        core.text.color_write("Leave slots 1 and 2 empty", colors.cyan)
         term.setCursorPos(1,branch.ids_line+4)
-        branch.color_write("Put a stack of cobblestone in slot "..branch.settings["cobblestone_slot"], colors.cyan)
+        core.text.color_write("Put a stack of cobblestone in slot "..branch.settings["cobblestone_slot"], colors.cyan)
         term.setCursorPos(1,branch.ids_line+5)
-        branch.color_write("Put any \"do not mine\" blocks in others", colors.cyan)
+        core.text.color_write("Put any \"do not mine\" blocks in others", colors.cyan)
         term.setCursorPos(3,branch.ids_line+6)
-        branch.color_write("i.e.: cobblestone, stone,", colors.cyan)
+        core.text.color_write("i.e.: cobblestone, stone,", colors.cyan)
         term.setCursorPos(4,branch.ids_line+7)
-        branch.color_write("dirt, gravel", colors.cyan)
-        branch.wait_for_enter()
+        core.text.color_write("dirt, gravel", colors.cyan)
+        core.text.wait_for_enter()
         while (turtle.getItemCount(branch.settings["cobblestone_slot"]) < 64) do
-            branch.print_error(branch.message_error_cobble)
+            core.text.print_error(branch, core.strings.levels.error, branch.strings.errors.cobble)
         end
         -- add items in all slots but 1 and 2 to test_slots
         term.setCursorPos(1,branch.ids_line+3)
-        branch.clear_line()
+        core.text.clear_line()
         term.setCursorPos(1,branch.ids_line+4)
-        branch.clear_line()
+        core.text.clear_line()
         term.setCursorPos(1,branch.ids_line+5)
-        branch.clear_line()
+        core.text.clear_line()
         term.setCursorPos(1,branch.ids_line+6)
-        branch.clear_line()
+        core.text.clear_line()
         term.setCursorPos(1,branch.ids_line+7)
-        branch.clear_line()
+        core.text.clear_line()
     end
 
     for i=1,16 do
@@ -922,13 +937,13 @@ local function main()
 
     -- print current branch data
     term.setCursorPos(1,branch.ids_line+2)
-    branch.color_write("Current Branch", colors.cyan)
+    core.text.color_write("Current Branch", colors.cyan)
     term.setCursorPos(unpack(current_branch_location))
-    branch.color_write(string.format("%3d", branch.progress["branch"]["current"]), colors.yellow)
+    core.text.color_write(string.format("%3d", branch.progress["branch"]["current"]), colors.yellow)
     term.setCursorPos(term_size[1]-5,branch.ids_line+2)
-    branch.color_write("of", colors.white)
+    core.text.color_write("of", colors.white)
     term.setCursorPos(term_size[1]-2,branch.ids_line+2)
-    branch.color_write(string.format("%3d", branch.settings["number_of_branches"]), colors.magenta)
+    core.text.color_write(string.format("%3d", branch.settings["number_of_branches"]), colors.magenta)
 
     -- if transmit, send start signal to receiver
     if (branch.settings["transmit_progress"]) then
@@ -952,14 +967,14 @@ local function main()
     for i=branch.progress["branch"]["current"],branch.settings["number_of_branches"] do
         branch.update_progress("branch", i, "current")
         term.setCursorPos(unpack(current_branch_location))
-        branch.color_write(string.format("%3d", branch.progress["branch"]["current"]), colors.yellow)
+        core.text.color_write(string.format("%3d", branch.progress["branch"]["current"]), colors.yellow)
         -- if transmit, update current branch
         if (branch.settings["transmit_progress"]) then
             local send_data = {}
             send_data["branch"] = branch.progress["branch"]["current"]
             branch.send_message("branch_update", send_data)
         end
-        branch.log("branch: "..branch.progress["branch"]["current"])
+        core.log(branch, core.strings.levels.debug, "branch: "..branch.progress["branch"]["current"])
         -- dig branch
         dig_branch()
         -- dig to next branch
@@ -975,13 +990,19 @@ local function main()
     -- delete progress file
     fs.delete(branch.progress_file)
     -- wait for user's acknowledgement of completion
-    branch.wait_for_enter()
+    core.text.wait_for_enter()
     term.setCursorPos(1,1)
     term.clear()
 end
 
+-- make sure required code gets/is loaded
+assert(not (core == nil))
+assert(os.loadAPI(core.base_path.."am-cc/core/branch"))
+core.init_settings(branch)
 if (not args[1]) and branch.settings["do_multitask"] then
     shell.openTab("branch", "true")
 else
     main()
 end
+-- unload shared code
+os.unloadAPI(core.base_path.."am-cc/core/branch")
