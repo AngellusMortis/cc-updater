@@ -4,7 +4,7 @@ program_name = "am-cc Updater"
 --[[
 ##file: am/programs/update.lua
 ##version: ]]--
-program_version = "5.1.0.1"
+program_version = "5.1.0.2"
 --[[
 
 ##type: program
@@ -131,7 +131,9 @@ local function check_for_updates(data, path)
         if not (tonumber(index) == nil) then
             print("Checking: "..base_path..path.."/"..value["file"])
             local do_update = true
-            if (fs.exists(base_path..path.."/"..value["file"])) then
+            if ((path == "am-cc/programs/computer") and not (turtle == nil)) or ((path == "am-cc/programs/turtle") and (turtle == nil)) then
+                do_update = false
+            elseif (fs.exists(base_path..path.."/"..value["file"])) then
                 file_version = get_version_info(base_path..path.."/"..value["file"])
                 if not (compare_version(value["version"], file_version) == 1) then
                     do_update = false
