@@ -4,7 +4,7 @@ program_name = "am-cc Updater"
 --[[
 ##file: am/programs/update.lua
 ##version: ]]--
-program_version = "5.1.1.3"
+program_version = "5.1.1.4"
 --[[
 
 ##type: program
@@ -139,8 +139,6 @@ local function check_for_updates(data, path)
         check_path = base_path..check_path
     end
 
-    check_path_for_folders(base_path..path)
-
     for index,value in pairs(data) do
         if not (tonumber(index) == nil) then
             print("Checking: "..check_path..value["file"])
@@ -156,6 +154,7 @@ local function check_for_updates(data, path)
             end
 
             if (do_update) then
+                check_path_for_folders(base_path..path)
                 print("Updating: "..check_path..value["file"])
                 if (fs.exists(check_path..value["file"])) then
                     fs.move(check_path..value["file"], check_path..value["file"]..".bak")
