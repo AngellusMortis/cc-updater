@@ -55,7 +55,7 @@ end
 
 local function get_update_data()
     local response = http.get(update_url.."?random="..math.random(1, 1000000))
-    if (response.getResponseCode() == 200) or (response.getResponseCode() == 304) {
+    if (response.getResponseCode() == 200) or (response.getResponseCode() == 304) then
         response = textutils.unserialize(response.readAll())
         if not response["success"] then
             error("Update failed: "..response["error"])
