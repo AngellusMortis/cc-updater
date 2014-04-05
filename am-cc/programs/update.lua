@@ -4,7 +4,7 @@ program_name = "am-cc Updater"
 --[[
 ##file: am/programs/update.lua
 ##version: ]]--
-program_version = "5.1.1.4"
+program_version = "5.1.1.5"
 --[[
 
 ##type: program
@@ -148,7 +148,9 @@ local function check_for_updates(data, path)
             elseif (fs.exists(check_path..value["file"])) then
                 file_version = get_version_info(check_path..value["file"])
                 if (file_version == false) or (not (compare_version(value["version"], file_version) == 1)) then
-                    print("Failed to update: "..check_path..value["file"])
+                    if (file_version == false) then
+                        print("Failed to update: "..check_path..value["file"])
+                    end
                     do_update = false
                 end
             end
