@@ -4,7 +4,7 @@ program_name = "am-cc Updater"
 --[[
 ##file: am/programs/update.lua
 ##version: ]]--
-program_version = "5.1.0.2"
+program_version = "5.1.1.0"
 --[[
 
 ##type: program
@@ -127,32 +127,40 @@ end
 
 local function check_for_updates(data, path)
     check_path_for_folders(base_path..path)
+    check_path = ""
+    if not (base_path == "/") then
+        check_path = base_path
+    end
+    if not (path == "/") then
+        check_path = check_path..path
+    end
+
     for index,value in pairs(data) do
         if not (tonumber(index) == nil) then
-            print("Checking: "..base_path..path.."/"..value["file"])
+            print("Checking: "..check_path.."/"..value["file"])
             local do_update = true
             if ((path == "am-cc/programs/computer") and not (turtle == nil)) or ((path == "am-cc/programs/turtle") and (turtle == nil)) then
                 do_update = false
-            elseif (fs.exists(base_path..path.."/"..value["file"])) then
-                file_version = get_version_info(base_path..path.."/"..value["file"])
+            elseif (fs.exists(check_path.."/"..value["file"])) then
+                file_version = get_version_info(check_path.."/"..value["file"])
                 if not (compare_version(value["version"], file_version) == 1) then
                     do_update = false
                 end
             end
 
             if (do_update) then
-                print("Updating: "..base_path..path.."/"..value["file"])
-                if (fs.exists(base_path..path.."/"..value["file"])) then
-                    fs.move(base_path..path.."/"..value["file"], base_path..path.."/"..value["file"]..".bak")
+                print("Updating: "..check_path.."/"..value["file"])
+                if (fs.exists(check_path.."/"..value["file"])) then
+                    fs.move(check_path.."/"..value["file"], check_path.."/"..value["file"]..".bak")
                 end
-                handle = fs.open(base_path..path.."/"..value["file"], "w")
+                handle = fs.open(check_path.."/"..value["file"], "w")
                 if (handle) then
-                    handle.write(http.get(update_url..update_path..base_path..path.."/"..value["file"]..".lua?random="..math.random(1, 1000000)).readAll())
+                    handle.write(http.get(update_url..update_path..check_path.."/"..value["file"]..".lua?random="..math.random(1, 1000000)).readAll())
                     handle.close()
-                    fs.delete(base_path..path.."/"..value["file"]..".bak")
+                    fs.delete(check_path.."/"..value["file"]..".bak")
                 else
-                    fs.move(base_path..path.."/"..value["file"]..".bak", base_path..path.."/"..value["file"])
-                    error("Failed to update: "..base_path..path.."/"..value["file"])
+                    fs.move(check_path.."/"..value["file"]..".bak", check_path.."/"..value["file"])
+                    error("Failed to update: "..check_path.."/"..value["file"])
                 end
             end
         else
