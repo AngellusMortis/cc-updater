@@ -4,7 +4,7 @@ program_name = "am-cc Updater"
 --[[
 ##file: am/programs/update.lua
 ##version: ]]--
-program_version = "5.1.1.2"
+program_version = "5.1.1.3"
 --[[
 
 ##type: program
@@ -54,11 +54,16 @@ local function split(str, pat)
 end
 
 local function get_update_data()
-    local response = textutils.unserialize(http.get(update_url.."?random="..math.random(1, 1000000)).readAll())
-    if not response["success"] then
-        error("Update failed: "..response["error"])
+    local response = http.get(update_url.."?random="..math.random(1, 1000000))
+    if (response.getResponseCode() == 200) or (response.getResponseCode() == 304) {
+        response = textutils.unserialize(response.readAll())
+        if not response["success"] then
+            error("Update failed: "..response["error"])
+        end
+        return response["data"]
+    else
+        return false
     end
-    return response["data"]
 end
 
 local function check_path_for_folders(path)
@@ -126,9 +131,9 @@ local function compare_version(version_1, version_2)
 end
 
 local function check_for_updates(data, path)
-    check_path = "/"
+    local check_path = "/"
     if not (path == "/") then
-        check_path = path..check_path
+        check_path = "/"..path..check_path
     end
     if not (base_path == "/") then
         check_path = base_path..check_path
@@ -145,6 +150,7 @@ local function check_for_updates(data, path)
             elseif (fs.exists(check_path..value["file"])) then
                 file_version = get_version_info(check_path..value["file"])
                 if (file_version == false) or (not (compare_version(value["version"], file_version) == 1)) then
+                    print("Failed to update: "..check_path..value["file"])
                     do_update = false
                 end
             end
@@ -156,12 +162,18 @@ local function check_for_updates(data, path)
                 end
                 handle = fs.open(check_path..value["file"], "w")
                 if (handle) then
-                    handle.write(http.get(update_url..update_path..check_path..value["file"]..".lua?random="..math.random(1, 1000000)).readAll())
-                    handle.close()
-                    fs.delete(check_path..value["file"]..".bak")
+                    local response = http.get(update_url..update_path..check_path..value["file"]..".lua?random="..math.random(1, 1000000))
+                    if (response.getResponseCode() == 200) or (response.getResponseCode() == 304) then
+                        handle.write(response.readAll())
+                        handle.close()
+                        fs.delete(check_path..value["file"]..".bak")
+                    else
+                        fs.move(check_path..value["file"]..".bak", check_path..value["file"])
+                        print("Failed to update: "..check_path..value["file"])
+                    end
                 else
                     fs.move(check_path..value["file"]..".bak", check_path..value["file"])
-                    error("Failed to update: "..check_path..value["file"])
+                    print("Failed to update: "..check_path..value["file"])
                 end
             end
         else
@@ -177,7 +189,11 @@ local function main()
     print("Getting file data...")
     local update_data = get_update_data()
 
-    check_for_updates(update_data, base_path)
+    if (update_data == false) then
+        error("Could not retrieve update data")
+    else
+        check_for_updates(update_data, base_path)
+    end
 end
 
 main()
