@@ -6,7 +6,7 @@ local self = {
     --[[
     ##file: am/programs/update.lua
     ##version: ]]--
-    version = "5.2.0.0",
+    version = "5.2.0.1",
     --[[
 
     ##type: program
@@ -55,7 +55,9 @@ self.get_update_data = function()
     local response = http.get(self.update_url.."?random="..math.random(1, 1000000))
     if (response.getResponseCode() == 200) or (response.getResponseCode() == 304) then
         response = response.readAll()
-        core.log(self, core.strings.levels.debug, response)
+        if (self.has_core) then
+            core.log(self, core.strings.levels.debug, response)
+        end
         response = textutils.unserialize(response)
         if not response["success"] then
             error("Update failed: "..response["error"])
@@ -289,9 +291,7 @@ local main = function()
             print(self.checked.." file(s) checked.")
             print(self.updated.." file(s) updated.")
             print(self.failed.." file(s) failed.")
-        end
-
-        if (args[1] == nil) then
+        elseif (args[1] == nil) then
             term.setCursorPos(self.base_x, self.base_y+4)
         end
     end
