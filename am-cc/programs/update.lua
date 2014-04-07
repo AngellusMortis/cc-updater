@@ -6,7 +6,7 @@ local self = {
     --[[
     ##file: am/programs/update.lua
     ##version: ]]--
-    version = "5.2.0.1",
+    version = "5.2.1.0",
     --[[
 
     ##type: program
@@ -291,6 +291,23 @@ local main = function()
             print(self.checked.." file(s) checked.")
             print(self.updated.." file(s) updated.")
             print(self.failed.." file(s) failed.")
+
+            term.write("Install complete. Rebooting.")
+            for i=1,5 do
+                local temp = 1
+                os.sleep(0.20)
+                term.write(".")
+            end
+            print()
+
+            if (fs.exists("install")) then
+                fs.delete("install")
+            else
+                print("Failed to remove installer. Please delete after reboot.")
+                os.sleep(3)
+            end
+            os.sleep(2)
+            os.reboot()
         elseif (args[1] == nil) then
             term.setCursorPos(self.base_x, self.base_y+4)
         end

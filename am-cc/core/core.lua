@@ -4,7 +4,7 @@ name = "am-cc"
 --[[
 ##file: am-cc/core/am-cc
 ##version: ]]--
-version = "1.0.0.0"
+version = "0.1.0.0"
 --[[
 
 ##type: core
