@@ -6,7 +6,7 @@ local self = {
     --[[
     ##file: am/programs/update.lua
     ##version: ]]--
-    version = "5.2.2.0",
+    version = "5.2.2.1",
     --[[
 
     ##type: program
@@ -25,9 +25,9 @@ local self = {
     -- hardcoded default settings
     settings_file = "",
     log_file = "",
-    update_url = "https://tundrasofangmar.net/"
-    status_path = "en-us/cc/"
-    update_path = "static/cc/"
+    update_url = "https://tundrasofangmar.net/",
+    status_path = "en-us/cc/",
+    update_path = "static/cc/",
 
     has_core = true,
     checked = 0,
