@@ -4,21 +4,35 @@ local self = {
     ##name: ]]--
     name = "Updater",
     --[[
-    ##file: am/programs/update.lua
+    ##file: 
+    am-cc/programs/update.lua
     ##version: ]]--
-    version = "5.2.2.3",
+    version = "5.2.3.0",
     --[[
 
-    ##type: program
-    ##desc: Checks for updates of the files currently on the file system for am-cc
+    ##type: 
+    program
+    ##desc: 
+    updater for am-cc
 
     ##detailed:
+	Checks for updates of the files currently on the file system for am-cc 
+	using backend server
 
-    ##planned:
+	##images:
+	None
 
-    ##issues:
+	##planned:
+	None
+
+	##issues:
+	- Does not handle HTTP errors well
 
     ##parameters:
+    None
+
+    ##usage:
+    cmd: update
 
     --]]
 

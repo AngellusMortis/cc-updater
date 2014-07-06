@@ -1,19 +1,44 @@
 local args = { ... }
 --[[
 ##name:
-##file: am-cc/programs/turtle/branch.lua
+#See am-cc/core/branch.lua
+##file: 
+am-cc/programs/turtle/branch.lua
 ##version: ]]--
 version = "3.7.1.0"
 --[[
 
-##type: turtle
-##desc: Mines a branch mine with a trunk and 5 branches each divded into two 50 length halves.
-
-##images:
-https://github.com/AngellusMortis/am-cc/tree/master/images/branch.lua
+##type: 
+turtle
+##desc: 
+branch mining program
 
 ##detailed:
-By default, creates a branch mine this fashion (by default):
+Mines a branch mine with a trunk and 5 branches each divded into two 50 length halves.
+
+##images:
+- https://tundrasofangmar.net/static/cc/images/branch.lua/
+-- 01.png
+-- 02.png
+-- 03.png
+-- 04.png
+-- 05.png
+-- 06.jpg
+
+##planned:
+- save/resume feature
+
+##issues:
+None
+
+##parameters:
+args[1]: force start without opening on new tab
+
+##usage:
+cmd: branch <force-no-tab>
+
+##setup:
+See images for for better setup. By default, creates a branch mine this fashion:
 Top:
                                                                Trunk (main shaft)
                                                                |-
@@ -67,15 +92,6 @@ Directions (T = turtle, assuming facing in direction of mine):
 
 Up: 4
 Down: 5
-
-##planned:
-#save/resume feature
-#liquids
-
-##issues:
-
-##parameters:
-args[1]: force start without opening on new tab
 
 --]]
 
