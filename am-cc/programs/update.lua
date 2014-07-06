@@ -6,7 +6,7 @@ local self = {
     --[[
     ##file: am/programs/update.lua
     ##version: ]]--
-    version = "5.2.2.1",
+    version = "5.2.2.2",
     --[[
 
     ##type: program
@@ -159,7 +159,7 @@ self.check_for_updates = function(data, path)
 
     for index,value in pairs(data) do
         if (index == "_files") then
-        	for subindx,subval in pairs(value)
+        	for subindx,subval in pairs(value) do
 	            self.checked = self.checked + 1
 	            if (self.has_core) then
 	                term.setCursorPos(self.base_x+9, self.base_y)
