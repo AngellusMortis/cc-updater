@@ -5,7 +5,7 @@ local args = { ... }
 ##file: 
 am-cc/programs/computer/branch.lua
 ##version: ]]--
-version = "3.7.1.0"
+version = "3.7.2.0"
 --[[
 
 ##type: 
