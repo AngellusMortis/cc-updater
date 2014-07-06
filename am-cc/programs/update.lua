@@ -6,7 +6,7 @@ local self = {
     --[[
     ##file: am/programs/update.lua
     ##version: ]]--
-    version = "5.2.2.2",
+    version = "5.2.2.3",
     --[[
 
     ##type: program
@@ -187,7 +187,7 @@ self.check_for_updates = function(data, path)
 	                if not (self.has_core) then
 	                    term.write(check_path..subval["file"].."...")
 	                else
-	                    core.log(self, core.strings.levels.debug, "updating "..check_path..value["file"])
+	                    core.log(self, core.strings.levels.debug, "updating "..check_path..subval["file"])
 	                end
 	                if (fs.exists(check_path..subval["file"])) then
 	                    fs.move(check_path..subval["file"], check_path..subval["file"]..".bak")
@@ -198,7 +198,7 @@ self.check_for_updates = function(data, path)
 	                    if (response.getResponseCode() == 200) or (response.getResponseCode() == 304) then
 	                        handle.write(response.readAll())
 	                        handle.close()
-	                        fs.delete(check_path..value["file"]..".bak")
+	                        fs.delete(check_path..subval["file"]..".bak")
 	                        if not (self.has_core) then
 	                            print("done")
 	                        else
