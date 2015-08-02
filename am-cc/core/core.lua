@@ -2,29 +2,39 @@
 ##name: ]]--
 name = "am-cc"
 --[[
-##file: am-cc/core/am-cc
+##file: 
+am-cc/core/core.lua
 ##version: ]]--
 version = "1.0.0.0"
 --[[
 
-##type: core
-##desc: common library
+##type: 
+core
+##desc: 
+common library
 
 ##detailed:
-Library of common code for other programs to use. To use this, run
-= loadfile("am-cc/core/am-cc")()
+Library of common code for other programs to use. This library should be loaded
+by startup.lua
 
 ##images:
+None
 
 ##planned:
+None
 
 ##issues:
+None
 
 ##parameters:
+None
+
+##usage:
+lua: os.loadAPI("am-cc/core/core")
 
 --]]
 
--- comman hardcoded default settings for other programs to use
+-- common hardcoded default settings for other programs to use
 base_path = "/"
 if (fs.exists("/disk/am-cc")) then
     base_path = "/disk/"

@@ -1,0 +1,70 @@
+--[[
+term.redirect(peripheral.wrap("bottom"))
+while true do
+  local type, side, x, y = os.pullEvent("monitor_touch")
+  term.clear()
+  term.setCursorPos(1,1)
+  print(side..": ("..x..","..y..")")
+end
+
+]]--
+
+local draw_board = function()
+    local start_x, start_y = 4, 8
+    local x_print_count, y_print_count = 1, 1
+    local top = { " A", " B", " C", " D", " E", " F", " G", " H", " I", " J"}
+    local side  = { " 1", " 2", " 3", " 4", " 5", " 6", " 7", " 8", " 9", "10"}
+    term.clear()
+    term.setCursorBlink(false)
+    for x=start_x, start_x+21 do
+        for y=start_y, start_y+10 do
+            local is_even = (((math.floor(x/2)+y) % 2) == 0)
+            if (x == start_x) or (x == (start_x+1)) or (y == start_y) then
+                term.setTextColor(colors.black)
+                term.setCursorPos(x, y)
+                if (is_even) then
+                    term.setBackgroundColor(colors.white)
+                else
+                    term.setBackgroundColor(colors.lightGray)
+                end
+                if (y > start_y) and (x == start_x) then
+                    term.write(top[y_print_count])
+                    y_print_count = y_print_count + 1
+                elseif (y == start_y) and (x > start_x+1) and (math.fmod(x,2) == 0) then
+                    term.write(side[x_print_count])
+                    x_print_count = x_print_count + 1
+                end
+            else
+                if (is_even) then
+                    paintutils.drawPixel(x, y, colors.blue)
+                else
+                    paintutils.drawPixel(x, y, colors.lightBlue)
+                end
+            end
+            term.setTextColor(colors.white)
+            term.setBackgroundColor(colors.black)
+        end
+    end
+end
+
+draw_board()
+
+
+local quit = function()
+    repeat
+        local event, key = os.pullEvent("key")
+    until key == 41 --tick
+end
+
+local mouse_click = function()
+    while true do
+        local event, button, x, y = os.pullEvent("mouse_click")
+        term.setCursorPos(1, 1)
+        term.clearLine()
+        term.write("("..x..","..y..")")
+    end
+end
+
+parallel.waitForAny(quit, mouse_click)
+term.clear()
+term.setCursorPos(1, 1)

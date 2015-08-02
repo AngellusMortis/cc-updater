@@ -3,25 +3,35 @@ local self = {
     ##name: ]]--
     name = "Startup",
     --[[
-    ##file: startup.lua
+    ##file: 
+    startup.lua
     ##version: ]]--
-    version = "1.0.0.0"
+    version = "1.0.1.0"
     --[[
 
-    ##type: startup
-    ##desc: Startup program
+    ##type: 
+    startup
+    ##desc: 
+    startup program
 
     ##detailed:
     Sets up the path variables and everything else nessecary, including checking
-    for updates if settings allow for it
+    for updates if settings allow for it.
 
     ##images:
+    None
 
     ##planned:
+    - Make loading screen nicer
 
     ##issues:
+    - Does not handle errors in updater
 
     ##parameters:
+    None
+
+    ##usage:
+    None (autoruns on boot)
 
     --]]
 }

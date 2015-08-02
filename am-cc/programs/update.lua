@@ -4,29 +4,44 @@ local self = {
     ##name: ]]--
     name = "Updater",
     --[[
-    ##file: am/programs/update.lua
+    ##file: 
+    am-cc/programs/update.lua
     ##version: ]]--
-    version = "5.2.0.1",
+    version = "5.2.3.0",
     --[[
 
-    ##type: program
-    ##desc: Checks for updates of the files currently on the file system for am-cc
+    ##type: 
+    program
+    ##desc: 
+    updater for am-cc
 
     ##detailed:
+	Checks for updates of the files currently on the file system for am-cc 
+	using backend server
 
-    ##planned:
+	##images:
+	None
 
-    ##issues:
+	##planned:
+	None
+
+	##issues:
+	- Does not handle HTTP errors well
 
     ##parameters:
+    None
+
+    ##usage:
+    cmd: update
 
     --]]
 
     -- hardcoded default settings
     settings_file = "",
     log_file = "",
-    update_url = "https://tundrasofangmar.net/cc/",
-    update_path = "f",
+    update_url = "https://tundrasofangmar.net/",
+    status_path = "en-us/cc/",
+    update_path = "static/cc/",
 
     has_core = true,
     checked = 0,
@@ -52,7 +67,7 @@ self.compare_version = nil
 self.check_for_updates = nil
 
 self.get_update_data = function()
-    local response = http.get(self.update_url.."?random="..math.random(1, 1000000))
+    local response = http.get(self.update_url..self.status_path.."?random="..math.random(1, 1000000))
     if (response.getResponseCode() == 200) or (response.getResponseCode() == 304) then
         response = response.readAll()
         if (self.has_core) then
@@ -157,65 +172,67 @@ self.check_for_updates = function(data, path)
     end
 
     for index,value in pairs(data) do
-        if not (tonumber(index) == nil) then
-            self.checked = self.checked + 1
-            if (self.has_core) then
-                term.setCursorPos(self.base_x+9, self.base_y)
-                core.text.color_write(string.format("%3d", self.checked), colors.yellow)
+        if (index == "_files") then
+        	for subindx,subval in pairs(value) do
+	            self.checked = self.checked + 1
+	            if (self.has_core) then
+	                term.setCursorPos(self.base_x+9, self.base_y)
+	                core.text.color_write(string.format("%3d", self.checked), colors.yellow)
 
-                core.log(self, core.strings.levels.debug, "checking "..check_path..value["file"])
-            end
-            local do_update = true
-            if ((path == "am-cc/programs/computer") and not (turtle == nil)) or ((path == "am-cc/programs/turtle") and (turtle == nil)) then
-                do_update = false
-            elseif (fs.exists(check_path..value["file"])) then
-                file_version = self.get_version_info(check_path..value["file"])
-                if (file_version == false) or (not (self.compare_version(value["version"], file_version) == 1)) then
-                    if (file_version == false) then
-                        if not (self.has_core) then
-                            self.failed_to_update(check_path..value["file"], true)
-                        end
-                    end
-                    do_update = false
-                end
-            end
+	                core.log(self, core.strings.levels.debug, "checking "..check_path..subval["file"])
+	            end
+	            local do_update = true
+	            if ((path == "am-cc/programs/computer") and not (turtle == nil)) or ((path == "am-cc/programs/turtle") and (turtle == nil)) then
+	                do_update = false
+	            elseif (fs.exists(check_path..subval["file"])) then
+	                file_version = self.get_version_info(check_path..subval["file"])
+	                if (file_version == false) or (not (self.compare_version(subval["version"], file_version) == 1)) then
+	                    if (file_version == false) then
+	                        if not (self.has_core) then
+	                            self.failed_to_update(check_path..subval["file"], true)
+	                        end
+	                    end
+	                    do_update = false
+	                end
+	            end
 
-            if (do_update) then
-                self.check_path_for_folders(check_path)
-                if not (self.has_core) then
-                    term.write(check_path..value["file"].."...")
-                else
-                    core.log(self, core.strings.levels.debug, "updating "..check_path..value["file"])
-                end
-                if (fs.exists(check_path..value["file"])) then
-                    fs.move(check_path..value["file"], check_path..value["file"]..".bak")
-                end
-                handle = fs.open(check_path..value["file"], "w")
-                if (handle) then
-                    local response = http.get(self.update_url..self.update_path..check_path..value["file"]..".lua?random="..math.random(1, 1000000))
-                    if (response.getResponseCode() == 200) or (response.getResponseCode() == 304) then
-                        handle.write(response.readAll())
-                        handle.close()
-                        fs.delete(check_path..value["file"]..".bak")
-                        if not (self.has_core) then
-                            print("done")
-                        else
-                            core.log(self, core.strings.levels.info, "updated "..check_path..value["file"])
-                        end
-                        self.updated = self.updated + 1
-                        if (self.has_core) then
-                            term.setCursorPos(self.base_x+9, self.base_y+1)
-                            core.text.color_write(string.format("%3d", self.updated), colors.yellow)
-                        end
-                    else
-                        fs.move(check_path..value["file"]..".bak", check_path..value["file"])
-                        self.failed_to_update(check_path..value["file"])
-                    end
-                else
-                    fs.move(check_path..value["file"]..".bak", check_path..value["file"])
-                    self.failed_to_update(check_path..value["file"])
-                end
-            end
+	            if (do_update) then
+	                self.check_path_for_folders(check_path)
+	                if not (self.has_core) then
+	                    term.write(check_path..subval["file"].."...")
+	                else
+	                    core.log(self, core.strings.levels.debug, "updating "..check_path..subval["file"])
+	                end
+	                if (fs.exists(check_path..subval["file"])) then
+	                    fs.move(check_path..subval["file"], check_path..subval["file"]..".bak")
+	                end
+	                handle = fs.open(check_path..subval["file"], "w")
+	                if (handle) then
+	                    local response = http.get(self.update_url..self.update_path..check_path..subval["file"]..".lua?random="..math.random(1, 1000000))
+	                    if (response.getResponseCode() == 200) or (response.getResponseCode() == 304) then
+	                        handle.write(response.readAll())
+	                        handle.close()
+	                        fs.delete(check_path..subval["file"]..".bak")
+	                        if not (self.has_core) then
+	                            print("done")
+	                        else
+	                            core.log(self, core.strings.levels.info, "updated "..check_path..subval["file"])
+	                        end
+	                        self.updated = self.updated + 1
+	                        if (self.has_core) then
+	                            term.setCursorPos(self.base_x+9, self.base_y+1)
+	                            core.text.color_write(string.format("%3d", self.updated), colors.yellow)
+	                        end
+	                    else
+	                        fs.move(check_path..subval["file"]..".bak", check_path..subval["file"])
+	                        self.failed_to_update(check_path..subval["file"])
+	                    end
+	                else
+	                    fs.move(check_path..subval["file"]..".bak", check_path..subval["file"])
+	                    self.failed_to_update(check_path..subval["file"])
+	                end
+	            end
+	        end
         else
             self.check_for_updates(value, index)
         end
@@ -291,6 +308,23 @@ local main = function()
             print(self.checked.." file(s) checked.")
             print(self.updated.." file(s) updated.")
             print(self.failed.." file(s) failed.")
+
+            term.write("Install complete. Rebooting.")
+            for i=1,5 do
+                local temp = 1
+                os.sleep(0.20)
+                term.write(".")
+            end
+            print()
+
+            if (fs.exists("install")) then
+                fs.delete("install")
+            else
+                print("Failed to remove installer. Please delete after reboot.")
+                os.sleep(3)
+            end
+            os.sleep(2)
+            os.reboot()
         elseif (args[1] == nil) then
             term.setCursorPos(self.base_x, self.base_y+4)
         end

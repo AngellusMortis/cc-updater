@@ -1,24 +1,35 @@
 local args = { ... }
 --[[
 ##name:
-##file: am-cc/programs/computer/branch.lua
+#See am-cc/core/branch.lua
+##file: 
+am-cc/programs/computer/branch.lua
 ##version: ]]--
-version = "3.7.1.0"
+version = "3.7.2.0"
 --[[
 
-##type: computer
-##desc: Reciever code for branch mining program (see am-cc/programs/turtle/branch.lua)
+##type: 
+computer
+##desc: 
+reciever for branch mining 
 
 ##detailed:
+Reciever code for branch mining program. See am-cc/programs/turtle/branch.lua
 
 ##images:
+#See am-cc/programs/turtle/branch.lua
 
 ##planned:
+#See am-cc/programs/turtle/branch.lua
 
 ##issues:
+#See am-cc/programs/turtle/branch.lua
 
 ##parameters:
 args[1]: force start without opening on new tab
+
+##usage:
+cmd: branch <force-no-tab>
 
 --]]
 

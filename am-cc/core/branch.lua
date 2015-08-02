@@ -3,23 +3,36 @@ assert(not (core == nil))
 ##name: ]]--
 name = "Branch"
 --[[
-##file: am-cc/core/branch.lua
+##file: 
+am-cc/core/branch.lua
 ##version: ]]--
-version = "3.7.1.0"
+version = "3.7.2.0"
 --[[
 
-##type: core
-##desc: Shared code for branch mining program (see am-cc/programs/turtle/branch.lua)
+##type: 
+core
+##desc: 
+core for branch mining
 
 ##detailed:
+Shared code for turtle branch mining program that is used by turtle and reciever 
+computer program. See am-cc/programs/turtle/branch.lua and 
+am-cc/programs/computer/branch.lua
 
 ##images:
+#See am-cc/programs/turtle/branch.lua
 
 ##planned:
+#See am-cc/programs/turtle/branch.lua
 
 ##issues:
+#See am-cc/programs/turtle/branch.lua
 
 ##parameters:
+None
+
+##usage:
+lua: os.loadAPI(core.base_path.."am-cc/core/branch")
 
 --]]
 
