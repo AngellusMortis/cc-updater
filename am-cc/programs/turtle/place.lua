@@ -2,7 +2,8 @@
 ##name: ]]--
 program_name = "am-cc Block Placer"
 --[[
-##file: am/turtle/place.lua
+##file:
+am-cc/programs/turtle/place
 ##version: ]]--
 program_version = "1.1.2.0"
 --[[

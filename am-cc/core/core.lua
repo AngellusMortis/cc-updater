@@ -2,15 +2,15 @@
 ##name: ]]--
 name = "am-cc"
 --[[
-##file: 
-am-cc/core/core.lua
+##file:
+am-cc/core/core
 ##version: ]]--
 version = "1.0.0.0"
 --[[
 
-##type: 
+##type:
 core
-##desc: 
+##desc:
 common library
 
 ##detailed:

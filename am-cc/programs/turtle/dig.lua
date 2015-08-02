@@ -2,7 +2,8 @@
 ##name: ]]--
 program_name = "am-cc Block Digger"
 --[[
-##file: am/turtle/place.lua
+##file:
+am-cc/programs/turtle/dig
 ##version: ]]--
 program_version = "1.1.1.0"
 --[[

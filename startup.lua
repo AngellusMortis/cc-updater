@@ -3,15 +3,15 @@ local self = {
     ##name: ]]--
     name = "Startup",
     --[[
-    ##file: 
+    ##file:
     startup.lua
     ##version: ]]--
     version = "1.0.1.0"
     --[[
 
-    ##type: 
+    ##type:
     startup
-    ##desc: 
+    ##desc:
     startup program
 
     ##detailed:
@@ -86,11 +86,11 @@ local main = function()
         term.setCursorPos(22, 5)
     end
 
-    parallel.waitForAll(loop, update)
-
     if (core.settings["update_on_boot"]) then
+        parallel.waitForAll(loop, update)
         core.text.color_write("done :D", colors.cyan)
     else
+        loop()
         core.text.color_write("skipping :(", colors.cyan)
     end
 

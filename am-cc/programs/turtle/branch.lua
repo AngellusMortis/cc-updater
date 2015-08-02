@@ -2,15 +2,15 @@ local args = { ... }
 --[[
 ##name:
 #See am-cc/core/branch.lua
-##file: 
-am-cc/programs/turtle/branch.lua
+##file:
+am-cc/programs/turtle/branch
 ##version: ]]--
 version = "3.7.2.0"
 --[[
 
-##type: 
+##type:
 turtle
-##desc: 
+##desc:
 branch mining program
 
 ##detailed:

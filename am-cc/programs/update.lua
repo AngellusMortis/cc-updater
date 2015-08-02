@@ -5,7 +5,7 @@ local self = {
     name = "Updater",
     --[[
     ##file:
-    am-cc/programs/update.lua
+    am-cc/programs/update
     ##version: ]]--
     version = "5.2.3.0",
     --[[

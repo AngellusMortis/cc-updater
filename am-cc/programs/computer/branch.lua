@@ -3,15 +3,15 @@ local args = { ... }
 ##name:
 #See am-cc/core/branch.lua
 ##file: 
-am-cc/programs/computer/branch.lua
+am-cc/programs/computer/branch
 ##version: ]]--
 version = "3.7.2.0"
 --[[
 
-##type: 
+##type:
 computer
-##desc: 
-reciever for branch mining 
+##desc:
+reciever for branch mining
 
 ##detailed:
 Reciever code for branch mining program. See am-cc/programs/turtle/branch.lua
