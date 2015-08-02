@@ -39,9 +39,9 @@ local self = {
     -- hardcoded default settings
     settings_file = "",
     log_file = "",
-    update_url = "https://tundrasofangmar.net/",
-    status_path = "en-us/cc/",
-    update_path = "static/cc/",
+    update_url = "https://mort.is/",
+    status_path = "cc/",
+    update_path = "cc/",
 
     has_core = true,
     checked = 0,
