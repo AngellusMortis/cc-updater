@@ -4,19 +4,19 @@ local self = {
     ##name: ]]--
     name = "Updater",
     --[[
-    ##file: 
+    ##file:
     am-cc/programs/update.lua
     ##version: ]]--
     version = "5.2.3.0",
     --[[
 
-    ##type: 
+    ##type:
     program
-    ##desc: 
+    ##desc:
     updater for am-cc
 
     ##detailed:
-	Checks for updates of the files currently on the file system for am-cc 
+	Checks for updates of the files currently on the file system for am-cc
 	using backend server
 
 	##images:
@@ -41,7 +41,7 @@ local self = {
     log_file = "",
     update_url = "https://mort.is/",
     status_path = "cc/",
-    update_path = "cc/",
+    update_path = "static/cc/",
 
     has_core = true,
     checked = 0,
