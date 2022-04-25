@@ -28,4 +28,4 @@ jobs:
         git pull github ${GITHUB_REF} --ff-only
         git add manifest.json
         git commit -m "Generate new manifest"
-        git push
+        git push github HEAD:${GITHUB_REF}
