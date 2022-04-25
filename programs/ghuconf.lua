@@ -1,4 +1,5 @@
-local ghu = require("/ghu/core/apis/ghu")
+local basePath = settings.get("ghu.base")
+local ghu = require(basePath .. "core/apis/ghu")
 
 local function printValue(name)
     local value = settings.get(ghu.s[name].name)

@@ -1,17 +1,27 @@
-local basePath = "/ghu/"
 local ghu = {}
+ghu.base = "/ghu/"
+if fs.exists("/disk/ghu") then
+    ghu.base = "/disk/ghu/"
+end
 ghu.s = {}
 
+ghu.s.base = {name="ghu.base", default=ghu.base}
 ghu.s.autoUpdate = {name="ghu.autoUpdate", default=true}
 ghu.s.coreRepo = {name="ghu.coreRepo", default="AngellusMortis/cc-github-updater"}
 ghu.s.extraRepos = {name="ghu.extraRepos", default={}}
 
-local autoUpdate = settings.get(ghu.s.autoUpdate.name, ghu.s.autoUpdate.default)
-settings.set(ghu.s.autoUpdate.name, autoUpdate)
-local coreRepo = settings.get(ghu.s.coreRepo.name, ghu.s.coreRepo.default)
-settings.set(ghu.s.coreRepo.name, coreRepo)
-local extraRepos = settings.get(ghu.s.extraRepos.name, ghu.s.extraRepos.default)
-settings.set(ghu.s.extraRepos.name, extraRepos)
+ghu.autoUpdate = settings.get(ghu.s.autoUpdate.name, ghu.s.autoUpdate.default)
+settings.set(ghu.s.autoUpdate.name, ghu.autoUpdate)
+ghu.coreRepo = settings.get(ghu.s.coreRepo.name, ghu.s.coreRepo.default)
+settings.set(ghu.s.coreRepo.name, ghu.coreRepo)
+ghu.extraRepos = settings.get(ghu.s.extraRepos.name, ghu.s.extraRepos.default)
+settings.set(ghu.s.extraRepos.name, ghu.extraRepos)
+
+local basePath = settings.get(ghu.s.base.name, ghu.s.base.default)
+if fs.exists(basePath) then
+    ghu.base = basePath
+end
+settings.set(ghu.s.base.name, ghu.base)
 
 ---------------------------------------
 -- Add Module path
@@ -24,9 +34,9 @@ settings.set(ghu.s.extraRepos.name, extraRepos)
 ---------------------------------------
 ghu.addModulePath = function(path)
     local modulePath = package.path
-    modulePath = modulePath .. ";" .. basePath .. path .. "/apis/?"
-    modulePath = modulePath .. ";" .. basePath .. path .. "/apis/?.lua"
-    modulePath = modulePath .. ";" .. basePath .. path .. "/apis/?/init.lua"
+    modulePath = modulePath .. ";" .. ghu.base .. path .. "/apis/?"
+    modulePath = modulePath .. ";" .. ghu.base .. path .. "/apis/?.lua"
+    modulePath = modulePath .. ";" .. ghu.base .. path .. "/apis/?/init.lua"
     package.path = modulePath
 end
 
@@ -74,7 +84,7 @@ end
 ---------------------------------------
 ghu.initModulePaths = function()
     ghu.addModulePath("core")
-    for i, repo in ipairs(extraRepos) do
+    for i, repo in ipairs(ghu.extraRepos) do
         ghu.addModulePath(repo)
     end
 end
@@ -84,7 +94,7 @@ end
 ---------------------------------------
 ghu.initShellPaths = function()
     ghu.addShellPath("core")
-    for i, repo in ipairs(extraRepos) do
+    for i, repo in ipairs(ghu.extraRepos) do
         ghu.addShellPath(repo)
     end
 end
