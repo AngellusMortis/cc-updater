@@ -18,7 +18,7 @@ local function updateRepo(repo, basePath)
         basePath = "/ghu/" .. repo
     end
     basePath = basePath .. "/"
-    print("." .. status .. "...")
+    print("." .. status)
 
     local baseURL = "https://raw.githubusercontent.com/" .. repo .."/" .. ref .. "/"
     local manifest = ghu.getJSON(baseURL .. "manifest.json")
@@ -32,7 +32,7 @@ local function updateRepo(repo, basePath)
 
     for path, checksum in pairs(manifest) do
         if checksum ~= localManifest[path] then
-            print(".." .. path .. "...")
+            print(".." .. path)
             ghu.download(baseURL .. path, basePath .. path)
         end
     end
