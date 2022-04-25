@@ -1,6 +1,6 @@
 {
   "programs/ghuupdate.lua": "3bb9203a23c7bd407cdfa9a9d48fbc743f51a1c4421cf35801205ae383cfe12f",
   "programs/ghuconf.lua": "365006d5940e72b38858127edea0c532dd09cd1bf01223719ea98efd7bf67026",
-  "apis/ghu.lua": "3fea31dc43a5d21cc6f1b2f82bde4f5e8bb62662b56ccb60d708a3f0d964ed19",
+  "apis/ghu.lua": "57a13dc6ecb7f5fb656a8fc8aed7fab22e6b648035043885c84f09ea03fa6f1a",
   "startup.lua": "9d5d271647e9def8da9a27d47c644c0a7b5a8ca7ef15da28b099357c2bc52e22"
 }
