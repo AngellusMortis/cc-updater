@@ -1,4 +1,4 @@
-name: CI
+name: Generate Manifest
 
 on:
   push:
