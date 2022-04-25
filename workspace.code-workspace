@@ -5,8 +5,8 @@
 			"path": "."
 		},
 		{
-			"name": "CC Test",
-			"path": "../cc-test"
+			"name": "CC Template",
+			"path": "../cc-template"
 		},
 		{
 			"name": "CraftOS",
