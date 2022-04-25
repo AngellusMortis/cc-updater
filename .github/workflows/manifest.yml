@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - master
+    paths:
+      - '**.lua'
 
 jobs:
-  build:
+  manifest:
     runs-on: ubuntu-latest
 
     steps:
@@ -14,7 +16,7 @@ jobs:
       uses: actions/checkout@v1
 
     - name: Generate Manifest
-      run: ./manifest.sh
+      run: bash ./manifest.sh
 
     - name: Setup Git
       run: |-
