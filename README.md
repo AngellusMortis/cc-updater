@@ -9,7 +9,7 @@ I am a developer. I would rather do development in my VS Code with my syntax hig
 Run the following command in your computer:
 
 ```bash
-gist run 4e2cf0a2ded3df7ee60127a44d17d655
+wget run https://raw.githubusercontent.com/AngellusMortis/cc-updater/master/install.lua
 ```
 
 You can view the [source of the gist](https://gist.github.com/AngellusMortis/4e2cf0a2ded3df7ee60127a44d17d655) before installing
