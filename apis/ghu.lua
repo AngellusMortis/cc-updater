@@ -103,4 +103,38 @@ ghu.split = function(str, sep)
     return t
 end
 
+---------------------------------------
+-- Performs HTTP GET and checks reponse
+---------------------------------------
+ghu.getAndCheck = function(url)
+    local r = http.get(url)
+    local rc, _ = r.getResponseCode()
+    if rc ~= 200 then
+        error(string.format("Bad HTTP code: %d", rc))
+    end
+    return r
+end
+
+---------------------------------------
+-- Download File
+---------------------------------------
+ghu.download = function(url, path)
+    if (fs.exists(path)) then
+        fs.delete(path)
+    end
+
+    local r = ghu.getAndCheck(url)
+    local f = fs.open(path, 'w')
+    f.write(r.readAll())
+    f.close()
+end
+
+---------------------------------------
+-- Gets JSON from URL
+---------------------------------------
+ghu.getJSON = function(url)
+    local r = ghu.getAndCheck(url)
+    return textutils.unserializeJSON(r.readAll())
+end
+
 return ghu
