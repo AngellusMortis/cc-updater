@@ -1,7 +1,7 @@
 local basePath = settings.get("ghu.base")
 local ghu = require(basePath .. "core/apis/ghu")
 
-local function updateRepo(repo, basePath)
+local function updateRepo(repo, basePath, allowStartup)
     local parts = ghu.split(repo, ":")
 
     local base = "/"
@@ -11,7 +11,7 @@ local function updateRepo(repo, basePath)
         error("Bad repo: " .. repo)
     else
         repo = parts[1]
-        base = parts[2]
+        base = parts[2] .. "/"
     end
 
     parts = ghu.split(repo, "@")
@@ -26,16 +26,16 @@ local function updateRepo(repo, basePath)
 
     local status = repo
     if basePath == nil then
-        basePath = "/ghu/" .. repo
+        basePath = ghu.base .. repo
     end
-    basePath = basePath .. base
+    destPath = base:gsub("/src", "")
+    basePath = basePath .. destPath
     print("." .. repo)
     print("..ref:" .. ref .. ".path:" .. base)
-    if basePath ~= nil then
-        print("..dest:" .. basePath)
-    end
+    destPath = base:gsub("/src", "")
+    print("..dest:" .. basePath)
 
-    local baseURL = "https://raw.githubusercontent.com/" .. repo .. "/" .. ref .. base .. "/"
+    local baseURL = "https://raw.githubusercontent.com/" .. repo .. "/" .. ref .. base
     local manifest = ghu.getJSON(baseURL .. "manifest.json")
     local localManifest = {}
     local manifestPath = basePath .. "manfiest"
@@ -46,9 +46,16 @@ local function updateRepo(repo, basePath)
     end
 
     for path, checksum in pairs(manifest) do
+        if path == "startup.lua" and not allowStartup then
+            error("Only coreRepo can set startup.lua")
+        end
         if checksum ~= localManifest[path] then
             print("..." .. path)
-            ghu.download(baseURL .. path, basePath .. path)
+            if path == "startup.lua" then
+                ghu.download(baseURL .. path, ghu.root .. path)
+            else
+                ghu.download(baseURL .. path, basePath .. path)
+            end
         end
     end
 
@@ -61,7 +68,7 @@ local function updateRepo(repo, basePath)
 end
 
 print("Updating repos...")
-updateRepo(ghu.coreRepo, ghu.base .. "core")
+updateRepo(ghu.coreRepo, ghu.base .. "core", true)
 for _, repo in pairs(ghu.extraRepos) do
     updateRepo(repo)
 end

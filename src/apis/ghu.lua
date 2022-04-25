@@ -1,6 +1,8 @@
 local ghu = {}
+ghu.root = "/"
 ghu.base = "/ghu/"
 if fs.exists("/disk/ghu") then
+    ghu.root = "/disk/"
     ghu.base = "/disk/ghu/"
 end
 ghu.s = {}
@@ -21,6 +23,10 @@ local basePath = settings.get(ghu.s.base.name, ghu.s.base.default)
 if fs.exists(basePath) then
     ghu.base = basePath
 end
+if string.sub(basePath, 1, string.len(5))== "/disk" then
+    ghu.root = "/disk/"
+end
+
 settings.set(ghu.s.base.name, ghu.base)
 
 ---------------------------------------
@@ -120,7 +126,7 @@ ghu.getAndCheck = function(url)
     url = url .. "?ts=" .. os.time(os.date("!*t"))
     local r = http.get(url)
     if r == nil then
-        error(string.format("Bad HTTP Response", url))
+        error(string.format("Bad HTTP Response: %s", url))
     end
     local rc, _ = r.getResponseCode()
     if rc ~= 200 then
