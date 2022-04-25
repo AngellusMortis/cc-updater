@@ -7,7 +7,7 @@ ghu.s = {}
 
 ghu.s.base = {name="ghu.base", default=ghu.base}
 ghu.s.autoUpdate = {name="ghu.autoUpdate", default=true}
-ghu.s.coreRepo = {name="ghu.coreRepo", default="AngellusMortis/cc-github-updater"}
+ghu.s.coreRepo = {name="ghu.coreRepo", default="AngellusMortis/cc-github-updater@v1"}
 ghu.s.extraRepos = {name="ghu.extraRepos", default={}}
 
 ghu.autoUpdate = settings.get(ghu.s.autoUpdate.name, ghu.s.autoUpdate.default)
@@ -117,6 +117,7 @@ end
 -- Performs HTTP GET and checks reponse
 ---------------------------------------
 ghu.getAndCheck = function(url)
+    url = url .. "?ts=" .. os.time(os.date("!*t"))
     local r = http.get(url)
     local rc, _ = r.getResponseCode()
     if rc ~= 200 then
