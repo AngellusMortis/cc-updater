@@ -19,13 +19,14 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add version.txt
-        git commit -m "Generate new manifest"
+        git commit -m "Bump version to v$(cat ./version.txt)"
         git push
 
     - name: Create Tags
       run: |
         majorTag=v$(bash ./getMajor.sh)
 
+        git fetch origin
         git tag -d $majorTag
         git push --delete origin $majorTag
         git tag $majorTag
