@@ -7,7 +7,7 @@ ghu.s = {}
 
 ghu.s.base = {name="ghu.base", default=ghu.base}
 ghu.s.autoUpdate = {name="ghu.autoUpdate", default=true}
-ghu.s.coreRepo = {name="ghu.coreRepo", default="AngellusMortis/cc-updater@v1:src"}
+ghu.s.coreRepo = {name="ghu.coreRepo", default="AngellusMortis/cc-updater@v1:/src"}
 ghu.s.extraRepos = {name="ghu.extraRepos", default={}}
 
 ghu.autoUpdate = settings.get(ghu.s.autoUpdate.name, ghu.s.autoUpdate.default)
@@ -119,6 +119,9 @@ end
 ghu.getAndCheck = function(url)
     url = url .. "?ts=" .. os.time(os.date("!*t"))
     local r = http.get(url)
+    if r == nil then
+        error(string.format("Bad HTTP Response", url))
+    end
     local rc, _ = r.getResponseCode()
     if rc ~= 200 then
         error(string.format("Bad HTTP code: %d", rc))

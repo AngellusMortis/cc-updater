@@ -35,7 +35,7 @@ local function updateRepo(repo, basePath)
         print("..dest:" .. basePath)
     end
 
-    local baseURL = "https://raw.githubusercontent.com/" .. repo .. base .. ref .. "/"
+    local baseURL = "https://raw.githubusercontent.com/" .. repo .. "/" .. ref .. base .. "/"
     local manifest = ghu.getJSON(baseURL .. "manifest.json")
     local localManifest = {}
     local manifestPath = basePath .. "manfiest"
