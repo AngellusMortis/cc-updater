@@ -117,7 +117,6 @@ end
 -- Performs HTTP GET and checks reponse
 ---------------------------------------
 ghu.getAndCheck = function(url)
-    url = url .. "?ts=" .. os.time(os.date("!*t"))
     local r = http.get(url)
     local rc, _ = r.getResponseCode()
     if rc ~= 200 then

@@ -2,6 +2,17 @@ local basePath = settings.get("ghu.base")
 local ghu = require(basePath .. "core/apis/ghu")
 
 local function updateRepo(repo, basePath)
+    local items = ghu.split(repo, ":")
+    local base = "/"
+    if #items == 1 then
+        base = "/"
+    elseif #items > 2 then
+        error("Bad repo: " .. repo)
+    else
+        repo = items[0]
+        base = items[1]
+    end
+
     items = ghu.split(repo, "@")
     if #items == 1 then
         ref = "master"
@@ -17,10 +28,10 @@ local function updateRepo(repo, basePath)
         status = repo
         basePath = "/ghu/" .. repo
     end
-    basePath = basePath .. "/"
+    basePath = basePath .. base
     print("." .. status)
 
-    local baseURL = "https://raw.githubusercontent.com/" .. repo .."/" .. ref .. "/"
+    local baseURL = "https://raw.githubusercontent.com/" .. repo .. base .. ref .. "/"
     local manifest = ghu.getJSON(baseURL .. "manifest.json")
     local localManifest = {}
     local manifestPath = basePath .. "manfiest"
