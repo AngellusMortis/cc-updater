@@ -20,8 +20,9 @@ local function updateRepo(repo, basePath)
     local baseURL = "https://raw.githubusercontent.com/" .. repo .."/" .. ref .. "/"
     local manifest = ghu.getJSON(baseURL .. "manifest.json")
     local localManifest = {}
-    if fs.exists(path .. "manfiest") then
-        local f = fs.open(path .. "manfiest", "r")
+    local manifestPath = basePath .. "manfiest"
+    if fs.exists(manifestPath) then
+        local f = fs.open(manifestPath, "r")
         localManifest = textutils.unserialize(f.readAll())
         f.close()
     end
@@ -33,7 +34,10 @@ local function updateRepo(repo, basePath)
         end
     end
 
-    local f = fs.open(path .. "manfiest", "w")
+    if fs.exists(manifestPath) then
+        fs.delete(manifestPath)
+    end
+    local f = fs.open(manifestPath, "w")
     f.write(textutils.serialize(manifest))
     f.close()
 end
