@@ -28,7 +28,7 @@ jobs:
 
         git fetch --tags
         git tag -d $majorTag
-        git push --delete $majorTag
+        git push --delete origin $majorTag
         git tag $majorTag
         git tag v$(cat ./version.txt)
 
