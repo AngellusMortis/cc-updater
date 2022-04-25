@@ -1,7 +1,12 @@
 {
 	"folders": [
 		{
+			"name": "CC Updater",
 			"path": "."
+		},
+		{
+			"name": "CC Test",
+			"path": "../cc-test"
 		},
 		{
 			"name": "CraftOS",
