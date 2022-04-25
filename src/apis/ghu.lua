@@ -133,7 +133,6 @@ ghu.initShellPaths = function()
     ghu.addShellPath("core/")
     for i, repoString in ipairs(ghu.extraRepos) do
         local repo, _, path = ghu.parseRepo(repoString)
-        print(repo .. path)
         ghu.addShellPath(repo .. path)
     end
 end
