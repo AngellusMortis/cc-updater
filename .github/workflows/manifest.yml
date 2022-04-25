@@ -22,6 +22,7 @@ jobs:
 
     - name: commit
       run: |
+        git checkout master
         git config user.name "GitHub Actions Bot"
         git config user.email "github-actions@github.com"
         git add manifest.json
