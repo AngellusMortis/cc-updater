@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "CraftOS",
+			"uri": "craftos-pc://0/"
+		}
+	],
+	"settings": {}
+}
