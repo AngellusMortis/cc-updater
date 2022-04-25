@@ -22,9 +22,10 @@ jobs:
 
     - name: commit
       run: |
-        git checkout master
         git config user.name "GitHub Actions Bot"
         git config user.email "github-actions@github.com"
+        git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
+        git pull github ${GITHUB_REF} --ff-only
         git add manifest.json
         git commit -m "Generate new manifest"
         git push
