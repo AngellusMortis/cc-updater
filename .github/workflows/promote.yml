@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  manifest:
+  promote:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,7 +18,7 @@ jobs:
       run: |
         git config user.name github-actions
         git config user.email github-actions@github.com
-        git add manifest.json
+        git add version.txt
         git commit -m "Generate new manifest"
         git push
 
