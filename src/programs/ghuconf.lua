@@ -72,6 +72,7 @@ local function main(op, settingName, value)
         end
 
         settings.set(ghu.s[settingName].name, value)
+        settings.save()
         printValue(settingName)
         return
     end

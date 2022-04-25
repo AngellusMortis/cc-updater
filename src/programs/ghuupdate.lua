@@ -32,7 +32,6 @@ local function updateRepo(repo, basePath, allowStartup)
     basePath = basePath .. destPath
     print("." .. repo)
     print("..ref:" .. ref .. ".path:" .. base)
-    destPath = base:gsub("/src", "")
     print("..dest:" .. basePath)
 
     local baseURL = "https://raw.githubusercontent.com/" .. repo .. "/" .. ref .. base
