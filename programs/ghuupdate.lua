@@ -2,34 +2,38 @@ local basePath = settings.get("ghu.base")
 local ghu = require(basePath .. "core/apis/ghu")
 
 local function updateRepo(repo, basePath)
-    local items = ghu.split(repo, ":")
+    local parts = ghu.split(repo, ":")
+
     local base = "/"
-    if #items == 1 then
+    if #parts == 1 then
         base = "/"
-    elseif #items > 2 then
+    elseif #parts > 2 then
         error("Bad repo: " .. repo)
     else
-        repo = items[0]
-        base = items[1]
+        repo = parts[1]
+        base = parts[2]
     end
 
-    items = ghu.split(repo, "@")
-    if #items == 1 then
+    parts = ghu.split(repo, "@")
+    if #parts == 1 then
         ref = "master"
-    elseif #items > 2 then
+    elseif #parts > 2 then
         error("Bad repo: " .. repo)
     else
-        repo = items[0]
-        ref = items[1]
+        repo = parts[1]
+        ref = parts[2]
     end
 
-    local status = string.format("%s (%s)", repo, basePath)
+    local status = repo
     if basePath == nil then
-        status = repo
         basePath = "/ghu/" .. repo
     end
     basePath = basePath .. base
-    print("." .. status)
+    print("." .. repo)
+    print("..ref:" .. ref .. ".path:" .. base)
+    if basePath ~= nil then
+        print("..dest:" .. basePath)
+    end
 
     local baseURL = "https://raw.githubusercontent.com/" .. repo .. base .. ref .. "/"
     local manifest = ghu.getJSON(baseURL .. "manifest.json")
@@ -43,7 +47,7 @@ local function updateRepo(repo, basePath)
 
     for path, checksum in pairs(manifest) do
         if checksum ~= localManifest[path] then
-            print(".." .. path)
+            print("..." .. path)
             ghu.download(baseURL .. path, basePath .. path)
         end
     end
