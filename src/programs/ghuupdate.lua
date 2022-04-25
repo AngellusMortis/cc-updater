@@ -1,29 +1,8 @@
 local basePath = settings.get("ghu.base")
 local ghu = require(basePath .. "core/apis/ghu")
 
-local function updateRepo(repo, basePath, allowStartup)
-    local parts = ghu.split(repo, ":")
-
-    local base = "/"
-    if #parts == 1 then
-        base = "/"
-    elseif #parts > 2 then
-        error("Bad repo: " .. repo)
-    else
-        repo = parts[1]
-        base = parts[2] .. "/"
-    end
-
-    parts = ghu.split(repo, "@")
-    if #parts == 1 then
-        ref = "master"
-    elseif #parts > 2 then
-        error("Bad repo: " .. repo)
-    else
-        repo = parts[1]
-        ref = parts[2]
-    end
-
+local function updateRepo(repoString, basePath, allowStartup)
+    local repo, ref, base = ghu.parseRepo(repoString)
     local status = repo
     if basePath == nil then
         basePath = ghu.base .. repo

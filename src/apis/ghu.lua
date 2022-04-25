@@ -30,6 +30,35 @@ end
 settings.set(ghu.s.base.name, ghu.base)
 
 ---------------------------------------
+-- Parse Github Repo
+---------------------------------------
+ghu.parseRepo = function(repo)
+    local parts = ghu.split(repo, ":")
+
+    local base = "/"
+    if #parts == 1 then
+        base = "/"
+    elseif #parts > 2 then
+        error("Bad repo: " .. repo)
+    else
+        repo = parts[1]
+        base = parts[2] .. "/"
+    end
+
+    parts = ghu.split(repo, "@")
+    if #parts == 1 then
+        ref = "master"
+    elseif #parts > 2 then
+        error("Bad repo: " .. repo)
+    else
+        repo = parts[1]
+        ref = parts[2]
+    end
+
+    return repo, ref, base
+end
+
+---------------------------------------
 -- Add Module path
 --
 -- Helper function to add a search path to package.path to loading APIs
@@ -60,27 +89,29 @@ end
 ---------------------------------------
 ghu.addShellPath = function(path)
     local shellPath = shell.path()
-    shellPath = shellPath .. ":" .. basePath .. path .. "/programs"
+    local basePath = ":" .. ghu.base .. path .. "programs/"
+
+    shellPath = shellPath .. basePath
     if term.isColor() then
-        shellPath = shellPath .. ":" .. basePath .. path .. "/programs/advanced"
+        shellPath = shellPath .. basePath .. "advanced"
     end
     if turtle then
-        shellPath = shellPath .. ":" .. basePath .. path .. "/programs/turtle"
+        shellPath = shellPath .. basePath .. "turtle"
     else
-        shellPath = shellPath .. ":" .. basePath .. path .. "/programs/rednet"
-        shellPath = shellPath .. ":" .. basePath .. path .. "/programs/fun"
+        shellPath = shellPath .. basePath .. "rednet"
+        shellPath = shellPath .. basePath .. "fun"
         if term.isColor() then
-            shellPath = shellPath .. ":" .. basePath .. path .. "/programs/fun/advanced"
+            shellPath = shellPath .. basePath .. "fun/advanced"
         end
     end
     if pocket then
-        shellPath = shellPath .. ":" .. basePath .. path .. "/programs/pocket"
+        shellPath = shellPath .. basePath .. "pocket"
     end
     if commands then
-        shellPath = shellPath .. ":" .. basePath .. path .. "/programs/command"
+        shellPath = shellPath .. basePath .. "command"
     end
     if http then
-        shellPath = shellPath .. ":" .. basePath .. path .. "/programs/http"
+        shellPath = shellPath .. basePath .. "http"
     end
     shell.setPath(shellPath)
 end
@@ -99,9 +130,11 @@ end
 -- Initializes default shell paths
 ---------------------------------------
 ghu.initShellPaths = function()
-    ghu.addShellPath("core")
-    for i, repo in ipairs(ghu.extraRepos) do
-        ghu.addShellPath(repo)
+    ghu.addShellPath("core/")
+    for i, repoString in ipairs(ghu.extraRepos) do
+        local repo, _, path = ghu.parseRepo(repoString)
+        print(repo .. path)
+        ghu.addShellPath(repo .. path)
     end
 end
 

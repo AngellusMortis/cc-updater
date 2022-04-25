@@ -39,6 +39,8 @@ local function main(root)
     settings.set("ghu.base", root .. "ghu/")
     settings.save()
     shell.run(root .. "ghu/core/programs/ghuupdate.lua")
+    local ghu = require(root .. "ghu/core/apis/ghu")
+    ghu.initShellPaths()
     print("Install complete")
 end
 
