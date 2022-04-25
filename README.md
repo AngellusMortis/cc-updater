@@ -1,2 +1,2 @@
-am-cc
-=====
+ComputerCraft Utilities
+=======================
