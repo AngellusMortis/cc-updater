@@ -1,4 +1,8 @@
+local expect = require("cc.expect").expect
+
 local function getAndCheck(url)
+    expect(1, url, "string")
+
     url = url .. "?ts=" .. os.time(os.date("!*t"))
     local r = http.get(url)
     if r == nil then
@@ -12,6 +16,9 @@ local function getAndCheck(url)
 end
 
 local function download(url, path)
+    expect(1, url, "string")
+    expect(2, path, "string")
+
     if (fs.exists(path)) then
         fs.delete(path)
     end
@@ -26,6 +33,7 @@ local function main(root)
     if root == nil then
         root = "/"
     end
+    expect(1, root, "string")
 
     download(
         "https://raw.githubusercontent.com/AngellusMortis/cc-updater/v1/src/apis/ghu.lua",

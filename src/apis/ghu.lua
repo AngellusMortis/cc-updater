@@ -1,3 +1,4 @@
+local expect = require("cc.expect").expect
 local ghu = {}
 ghu.root = "/"
 ghu.base = "/ghu/"
@@ -62,6 +63,7 @@ settings.set(ghu.s.base.name, ghu.base)
 -- Parse Github Repo
 ---------------------------------------
 ghu.parseRepo = function(repo)
+    expect(1, repo, "string")
     local parts = ghu.split(repo, ":")
 
     local base = "/"
@@ -97,6 +99,7 @@ end
 -- General structure is /ghu/{repoOwner}/{repoName}/apis/
 ---------------------------------------
 ghu.addModulePath = function(path)
+    expect(1, path, "string")
     local modulePath = package.path
     local basePath = ";" .. ghu.base .. path
     modulePath = modulePath .. basePath .. "apis/?"
@@ -118,6 +121,7 @@ end
 -- /ghu/{repoOwner}/{repoName}/
 ---------------------------------------
 ghu.addShellPath = function(path)
+    expect(1, path, "string")
     local shellPath = shell.path()
     local basePath = ":" .. ghu.base .. path .. "programs/"
 
@@ -172,6 +176,9 @@ end
 -- Splits a string
 ---------------------------------------
 ghu.split = function(str, sep)
+    expect(1, str, "string")
+    expect(2, sep, "string")
+
     if sep == nil then
         sep = ","
     end
@@ -186,6 +193,8 @@ end
 -- Performs HTTP GET and checks reponse
 ---------------------------------------
 ghu.getAndCheck = function(url)
+    expect(1, url, "string")
+
     url = url .. "?ts=" .. os.time(os.date("!*t"))
     local r = http.get(url)
     if r == nil then
@@ -202,6 +211,9 @@ end
 -- Download File
 ---------------------------------------
 ghu.download = function(url, path)
+    expect(1, url, "string")
+    expect(2, path, "string")
+
     if (fs.exists(path)) then
         fs.delete(path)
     end
@@ -216,6 +228,8 @@ end
 -- Gets JSON from URL
 ---------------------------------------
 ghu.getJSON = function(url)
+    expect(1, url, "string")
+
     local r = ghu.getAndCheck(url)
     return textutils.unserializeJSON(r.readAll())
 end
@@ -238,6 +252,11 @@ local boolMap = {
 -- Parses string into boolean
 ---------------------------------------
 ghu.strBool = function(orig)
+    if type(orig) == "boolean" then
+        return orig
+    end
+    expect(1, orig, "string")
+
     local value = orig:lower()
     value = boolMap[value]
     if value == nil then
@@ -250,6 +269,9 @@ end
 -- Concatenate tables
 ---------------------------------------
 ghu.tableConcat = function(src, new)
+    expect(1, src, "table")
+    expect(2, new, "table")
+
     for _, v in ipairs(new) do
         table.insert(src, v)
     end

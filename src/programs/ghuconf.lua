@@ -15,12 +15,14 @@ end
 
 local function printUsage(op)
     local programName = arg[0] or fs.getName(shell.getRunningProgram())
-    local usage = " <list|get|set|add|remove> [name] [value]"
+    local usage = " <list|get|help|set|add|remove> [name] [value]"
 
     if op == "list" then
         usage = " list"
     elseif op == "get" then
         usage = " get <name>"
+    elseif op == "help" then
+        usage = " help <name>"
     elseif op == "set" then
         usage = " set <name> <value>"
     elseif op == "add" then
@@ -40,7 +42,6 @@ local function main(op, settingName, value)
     end
 
     if op == "list" then
-        print(#(ghu.s) .. " Settings:")
         for key, _ in pairs(ghu.s) do
             print(key)
         end
@@ -59,6 +60,9 @@ local function main(op, settingName, value)
     if op == "get" then
         printValue(settingName)
         return
+    elseif op == "help" then
+        print(ghu.s[settingName].description)
+        return
     end
 
     if value == nil then
@@ -67,9 +71,11 @@ local function main(op, settingName, value)
     end
 
     if op == "set" then
-        if settingName == "extraRepos" then
+        if value == "default" then
+            value = ghu.copy(ghu.s[settingName].default)
+        elseif settingName == "extraRepos" then
             value = ghu.split(value)
-        elseif settingName == "autoUpdate" then
+        elseif settingName == "autoUpdate" or settingName == "autoRun" then
             value = ghu.strBool(value)
         end
 
