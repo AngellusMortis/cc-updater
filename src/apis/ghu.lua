@@ -5,21 +5,43 @@ if fs.exists("/disk/ghu") then
     ghu.root = "/disk/"
     ghu.base = "/disk/ghu/"
 end
+
 ghu.s = {}
+ghu.s.base = {
+    name = "ghu.base",
+    default = ghu.base,
+    type = "string",
+    description = "The base path for cc-updater. Recommendeded not to change."
+}
+ghu.s.autoUpdate = {
+    name="ghu.autoUpdate",
+    default = true,
+    type = "boolean",
+    description = "Auto-update cc-updater repos on computer boot."
+}
+ghu.s.coreRepo = {
+    name = "ghu.coreRepo",
+    default = "AngellusMortis/cc-updater@v1:/src",
+    type = "string",
+    description = "Core repo for cc-updater. Recommended not to change."
+}
+ghu.s.extraRepos = {
+    name = "ghu.extraRepos",
+    default = {},
+    type = "table",
+    description = "List of extra cc-updater repos."
+}
 
-ghu.s.base = {name="ghu.base", default=ghu.base}
-ghu.s.autoUpdate = {name="ghu.autoUpdate", default=true}
-ghu.s.coreRepo = {name="ghu.coreRepo", default="AngellusMortis/cc-updater@v1:/src"}
-ghu.s.extraRepos = {name="ghu.extraRepos", default={}}
+settings.define(ghu.s.base.name, ghu.s.base)
+settings.define(ghu.s.autoUpdate.name, ghu.s.autoUpdate)
+settings.define(ghu.s.coreRepo.name, ghu.s.coreRepo)
+settings.define(ghu.s.extraRepos.name, ghu.s.extraRepos)
 
-ghu.autoUpdate = settings.get(ghu.s.autoUpdate.name, ghu.s.autoUpdate.default)
-settings.set(ghu.s.autoUpdate.name, ghu.autoUpdate)
-ghu.coreRepo = settings.get(ghu.s.coreRepo.name, ghu.s.coreRepo.default)
-settings.set(ghu.s.coreRepo.name, ghu.coreRepo)
-ghu.extraRepos = settings.get(ghu.s.extraRepos.name, ghu.s.extraRepos.default)
-settings.set(ghu.s.extraRepos.name, ghu.extraRepos)
+ghu.autoUpdate = settings.get(ghu.s.autoUpdate.name)
+ghu.coreRepo = settings.get(ghu.s.coreRepo.name)
+ghu.extraRepos = settings.get(ghu.s.extraRepos.name)
 
-local basePath = settings.get(ghu.s.base.name, ghu.s.base.default)
+local basePath = settings.get(ghu.s.base.name)
 if fs.exists(basePath) then
     ghu.base = basePath
 end
@@ -188,5 +210,31 @@ ghu.getJSON = function(url)
     local r = ghu.getAndCheck(url)
     return textutils.unserializeJSON(r.readAll())
 end
+
+---------------------------------------
+-- Parses string into boolean
+---------------------------------------
+local boolMap = {
+    ["true"] = true,
+    ["yes"] = true,
+    ["1"] = true,
+    ["y"] = true,
+    ["t"] = true,
+    ["false"] = false,
+    ["no"] = false,
+    ["0"] = false,
+    ["n"] = false,
+    ["f"] = false,
+}
+
+ghu.strBool = function(orig)
+    local value = orig:lower()
+    value = boolMap[value]
+    if value == nil then
+        error(string.format("Unexpected string bool value: %s", orig))
+    end
+    return value
+end
+
 
 return ghu

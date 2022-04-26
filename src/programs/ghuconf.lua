@@ -69,6 +69,8 @@ local function main(op, settingName, value)
     if op == "set" then
         if settingName == "extraRepos" then
             value = ghu.split(value)
+        elseif settingName == "autoUpdate" then
+            value = ghu.strBool(value)
         end
 
         settings.set(ghu.s[settingName].name, value)
