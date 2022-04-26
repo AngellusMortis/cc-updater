@@ -7,4 +7,4 @@ ex:
 "ghuconf set autoUpdate false" will disable auto updating Github repos
 "ghuconf set autoUpdate default" will revert auto update to the default value (true)
 "ghuconf add extraRepos example/test:/src" will subscribe to Github repo "example/test" with the path "/src"
-"ghuconf remove extraRepos example/test:/src" will unsubsribe to Github repo "example/test" (does not delete files)
+"ghuconf remove extraRepos example/test:/src" will unsubscribe to Github repo "example/test" (does not delete files)
