@@ -1,7 +1,7 @@
 {
   "programs/ghureload.lua": "71ea67d1a39b04ae76a93788b3e439030a38f16e5a4cc8c565c07cff6ddbf74b",
   "programs/ghuupdate.lua": "858eba9643ca432132b146950ce030f31ce7cffc6c447100519ae35b9e4068bc",
-  "programs/ghuconf.lua": "77a0baf316095f284490d8307bccc04bd9972e33732b7c54678ef273287445b4",
-  "apis/ghu.lua": "74b5a5db54d42e63ee952178b2a507ee1602b1bce32247d385bd064af93135a2",
-  "startup.lua": "96add09d6fc94a18c19c9b36d4b42ef8a8719f203df5e630522aed7e25840fc5"
+  "programs/ghuconf.lua": "b222c4d4b699a6ba6624f2c85bfb11e96d52980d132e9aef02e4918a884bb45f",
+  "apis/ghu.lua": "a1bdf4bf1305a110a9d7db134bfadd2af1b23ff9b932d01d056e72e12459b4fb",
+  "startup.lua": "12d8a14c0dc57300f4c3d01b5e0fa9fb1a27d2caf0c32b041022af17aa6443ee"
 }
