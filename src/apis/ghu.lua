@@ -19,6 +19,12 @@ ghu.s.autoUpdate = {
     type = "boolean",
     description = "Auto-update cc-updater repos on computer boot."
 }
+ghu.s.autoRun = {
+    name="ghu.autoRun",
+    default = true,
+    type = "boolean",
+    description = "Allow extra repos to provide auto-run programs."
+}
 ghu.s.coreRepo = {
     name = "ghu.coreRepo",
     default = "AngellusMortis/cc-updater@v1:/src",
@@ -34,18 +40,19 @@ ghu.s.extraRepos = {
 
 settings.define(ghu.s.base.name, ghu.s.base)
 settings.define(ghu.s.autoUpdate.name, ghu.s.autoUpdate)
+settings.define(ghu.s.autoRun.name, ghu.s.autoRun)
 settings.define(ghu.s.coreRepo.name, ghu.s.coreRepo)
 settings.define(ghu.s.extraRepos.name, ghu.s.extraRepos)
 
 ghu.autoUpdate = settings.get(ghu.s.autoUpdate.name)
+ghu.autoRun = settings.get(ghu.s.autoRun.name)
 ghu.coreRepo = settings.get(ghu.s.coreRepo.name)
 ghu.extraRepos = settings.get(ghu.s.extraRepos.name)
 
-local basePath = settings.get(ghu.s.base.name)
-if fs.exists(basePath) then
-    ghu.base = basePath
+if fs.exists(settings.get(ghu.s.base.name)) then
+    ghu.base = settings.get(ghu.s.base.name)
 end
-if string.sub(basePath, 1, string.len(5))== "/disk" then
+if string.sub(settings.get(ghu.s.base.name), 1, string.len(5))== "/disk" then
     ghu.root = "/disk/"
 end
 
@@ -91,9 +98,10 @@ end
 ---------------------------------------
 ghu.addModulePath = function(path)
     local modulePath = package.path
-    modulePath = modulePath .. ";" .. ghu.base .. path .. "/apis/?"
-    modulePath = modulePath .. ";" .. ghu.base .. path .. "/apis/?.lua"
-    modulePath = modulePath .. ";" .. ghu.base .. path .. "/apis/?/init.lua"
+    local basePath = ";" .. ghu.base .. path
+    modulePath = modulePath .. basePath .. "apis/?"
+    modulePath = modulePath .. basePath .. "apis/?.lua"
+    modulePath = modulePath .. basePath .. "apis/?/init.lua"
     package.path = modulePath
 end
 
@@ -142,9 +150,10 @@ end
 -- Initializes default module paths
 ---------------------------------------
 ghu.initModulePaths = function()
-    ghu.addModulePath("core")
-    for i, repo in ipairs(ghu.extraRepos) do
-        ghu.addModulePath(repo)
+    ghu.addModulePath("core/")
+    for i, repoString in ipairs(ghu.extraRepos) do
+        local repo, _, path = ghu.parseRepo(repoString)
+        ghu.addModulePath(repo .. path)
     end
 end
 
@@ -211,9 +220,7 @@ ghu.getJSON = function(url)
     return textutils.unserializeJSON(r.readAll())
 end
 
----------------------------------------
--- Parses string into boolean
----------------------------------------
+
 local boolMap = {
     ["true"] = true,
     ["yes"] = true,
@@ -227,6 +234,9 @@ local boolMap = {
     ["f"] = false,
 }
 
+---------------------------------------
+-- Parses string into boolean
+---------------------------------------
 ghu.strBool = function(orig)
     local value = orig:lower()
     value = boolMap[value]
@@ -236,5 +246,29 @@ ghu.strBool = function(orig)
     return value
 end
 
+---------------------------------------
+-- Concatenate tables
+---------------------------------------
+ghu.tableConcat = function(src, new)
+    for _, v in ipairs(new) do
+        table.insert(src, v)
+    end
+    return src
+end
+
+---------------------------------------
+-- Gets autorun programs
+--
+-- Returns list of {ghu.extraRepos}/autorun/*.lua files
+---------------------------------------
+ghu.getAutoruns = function()
+    local autoruns = {}
+    for i, repoString in ipairs(ghu.extraRepos) do
+        local repo, _, path = ghu.parseRepo(repoString)
+        local repoPath = ghu.base .. repo .. path .. "autorun/"
+        autoruns = ghu.tableConcat(autoruns, fs.find(repoPath .. "*.lua"))
+    end
+    return autoruns
+end
 
 return ghu
