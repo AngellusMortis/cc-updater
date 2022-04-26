@@ -123,7 +123,9 @@ end
 ghu.addShellPath = function(path)
     expect(1, path, "string")
     local shellPath = shell.path()
-    local basePath = ":" .. ghu.base .. path .. "programs/"
+    local basePath = ":" .. ghu.base .. path
+    help.setPath(help.path() .. basePath .. "help")
+    basePath = basePath  .. "programs/"
 
     shellPath = shellPath .. basePath
     if term.isColor() then

@@ -1,7 +1,10 @@
 {
-  "programs/ghureload.lua": "71ea67d1a39b04ae76a93788b3e439030a38f16e5a4cc8c565c07cff6ddbf74b",
+  "apis/ghu.lua": "4af4ab99c0a7c6fa32cbf0955906747a4b285ebf7ed6a58778b9aad28801c958",
+  "startup.lua": "12d8a14c0dc57300f4c3d01b5e0fa9fb1a27d2caf0c32b041022af17aa6443ee",
   "programs/ghuupdate.lua": "858eba9643ca432132b146950ce030f31ce7cffc6c447100519ae35b9e4068bc",
   "programs/ghuconf.lua": "b222c4d4b699a6ba6624f2c85bfb11e96d52980d132e9aef02e4918a884bb45f",
-  "apis/ghu.lua": "a1bdf4bf1305a110a9d7db134bfadd2af1b23ff9b932d01d056e72e12459b4fb",
-  "startup.lua": "12d8a14c0dc57300f4c3d01b5e0fa9fb1a27d2caf0c32b041022af17aa6443ee"
+  "programs/ghureload.lua": "71ea67d1a39b04ae76a93788b3e439030a38f16e5a4cc8c565c07cff6ddbf74b",
+  "help/ghureload.txt": "d4458453b1035f8f29e52d53bcf73c36648b36fe1bde86122809b43cd0d4ea51",
+  "help/ghuupdate.txt": "dcfd2977cd87f0d4803d9597f92b6d89e881921e567da59c958597aaab81996b",
+  "help/ghuconf.txt": "ea5e543b1f8bf799d6f23c89bda9d1df88f6fc18ec25c20dc9689f60dff1a4e4"
 }

@@ -1,0 +1,10 @@
+alternative to set/get for managing ghu specific settings
+
+ex:
+"ghuconf list" will list all settings
+"ghuconf get extraRepo" will list all subscribed extra Github repos
+"ghuconf help autoUpdate" will print out the help for the auoUpdate setting
+"ghuconf set autoUpdate false" will disable auto updating Github repos
+"ghuconf set autoUpdate default" will revert auto update to the default value (true)
+"ghuconf add extraRepos example/test:/src" will subscribe to Github repo "example/test" with the path "/src"
+"ghuconf remove extraRepos example/test:/src" will unsubsribe to Github repo "example/test" (does not delete files)
