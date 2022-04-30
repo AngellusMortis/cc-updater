@@ -20,7 +20,23 @@ local function updateRepo(repoString, basePath, allowStartup)
     if fs.exists(manifestPath) then
         local f = fs.open(manifestPath, "r")
         localManifest = textutils.unserialize(f.readAll())
+        if localManifest.files == nil then
+            localManifest = {files=localManifest}
+        end
         f.close()
+    end
+
+    if manifest.files == nil then
+        manifest = {files=manifest}
+    end
+
+    if manifest.dependencies ~= nil and #(manifest.dependencies) > 0 then
+        print("..deps:" .. tostring(#(manifest.dependencies)))
+        print("..startdeps")
+        for _, depRepo in ipairs(manifest.dependencies) do
+            updateRepo(depRepo, basePath, false)
+        end
+        print("..enddeps")
     end
 
     for path, checksum in pairs(manifest) do
