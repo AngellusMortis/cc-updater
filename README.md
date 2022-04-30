@@ -1,8 +1,8 @@
 # ComputerCraft Updater
 
-Utility to update a CC: Tweaked computer automatically using a Github repo.
+Lightweight dependency manager for CC: Tweaked.
 
-I am a developer. I would rather do development in my VS Code with my syntax highlighting and such. And I would prefer to have everything version controlled (git). This is the latest iteration of my method of doing it: use Github + Github Actions to generate a manifest that CC: Tweaked can use to automatically download and update files on your computer.
+The goal is to make a easier way to distribute code to multiple computers quickly and consistently. This is not designed to be a full blown package manager (maybe someday), but it does allow you to update modules from Github as well as automatically pull dependencies for them (no conflict resolution).
 
 ## Install
 
@@ -12,21 +12,70 @@ Run the following command in your computer:
 wget run https://raw.githubusercontent.com/AngellusMortis/cc-updater/master/install.lua
 ```
 
-You can view the [source of the gist](https://gist.github.com/AngellusMortis/4e2cf0a2ded3df7ee60127a44d17d655) before installing
+## Adding Repos
 
-## Add Extra Repos
+You can add a repo for your computer using the `ghuconf` command. Format for adding new repos is `ghuconf add extraRepos {username}/{repo}:/src`.
 
-Go to the [template repo](https://github.com/AngellusMortis/cc-updater-template) and click "Use this template" and create a public repository (private repos are not supported). Add your files the `src` directory and commit/push them. Github Actions will automatically generate a `src/manifest.json` whenever you commit to the default branch.
+For example, if you want to add my [work in progress rendering library](https://github.com/AngellusMortis/am-cc/tree/master/render):
 
-Then you can run `ghuconf add extraRepos {username}/{repo}:/src` inside of your computer followed by `ghuupdate` and your repo will automatically be downloaded. You can optionally add `@{ref}` for target any specific ref or change `/src` to any other specific path. Example: `AngellusMortis/cc-updater@v2:/optional` would use the repo `AngellusMortis/cc-updater` with the ref `v2` and use `/optional/manifest.json` to donwload files.
+```bash
+ghuconf add extraRepos AngellusMortis/am-cc:/render
+```
 
-## How it Works
+You can optionally add `@{ref}` after the repo to pull a specific git ref (branch, tag or sha).
 
-Whenever a commit is made to the default branch of this repo, it will automatically run the [manifest.yml workflow](https://github.com/AngellusMortis/cc-updater/blob/master/.github/workflows/manifest.yml). This workflow will find every `.lua` file and generate a new `src/manifest.json` file and commit it back to the repo.
+## Making new Repos
 
-Then `ghuupdate.lua` on the computer will use the `ghu.coreRepo` and `ghu.extraRepos` settings to pull the `src/manifest.json` for each configured repo and compare that manifest with the manifest on disk and update any files that have changed.
+Go to the [template repo](https://github.com/AngellusMortis/cc-updater-template) and click "Use this template" and create a public repository (private repos are not supported). Add your files the `src` directory and commit/push them. Github Actions will automatically generate a `src/manifest.json` whenever you commit to the default branch. After the `manifest.json` is made, you can use `ghuconf` to add the repo to your computer.
 
-The `ghu.coreRepo` will automatically be downloaded to `/ghu/core` and each `ghu.extraRepos` will be downloaded to `/ghu/{username}/{repo}`. These paths will also automatically be added to your shell path as well following the same rules as the normal CraftOS paths (`programs/` will be added for all computers, `programs/advanced/` will be added for Advanced Computers, etc.)
+The folder structure largely mimics the folder structure from the CraftOS `rom` folder:
+
+* `/help`: `.txt` files added to the `/help` folder will be automatically added as help modules
+* `/programs`: `.lua` files added to the `/programs` folder will automatically be available in your shell path to run. Matches the same folder structure as CraftOS `rom` folder (`/programs/turtle` will be added if it is a turtle, etc.)
+* `/autorun`: Since cc-updater adds a `startup.lua` to your computer, you can add `.lua` files to `/autorun` that will automatically be ran to extend `startup.lua` and automatically start programs. This functionallity can be disabled with `ghuconf set autoRun false`.
+* `/apis`: `.lua` files added to the `/apis` folder will be available to import as Lua modules. Since there is no persistent way to add module paths, you will have to add the following to a Lua file to load them by their relative name:
+
+    ```lua
+        local ghu = require(settings.get("ghu.base") .. "core/apis/ghu")
+        ghu.initModulePaths()
+
+        -- example to load UI library from WIP rendering lib above (AngellusMortis/am-cc:/render):
+        local ui = require("uiLib")
+    ```
+
+* `/deps.json`: A JSON array of other Github repos that this one depends on. Will automatically be injected into the `manifest.json` when it is generated.
+
+## Provided Programs
+
+### ghuupdate
+
+This is basically the secret sauce. `ghuupdate` will use the settings `ghu.coreRepo` and `ghu.extraRepos` to pull `manifest.json` files from those Github repos and then update the files on disk. `ghuupdate` is automatically ran in the `startup.lua`. To disable the auto update, you can run `ghuconf set autoUpdate false`
+
+### ghureload
+
+Simple script to clear shell paths and then re-run the default `startup.lua` to "simulate" a reboot. Really useful if you cannot easily reboot the computer (background program running or you are using something like the awesome [ComputerCraft VS Code extension](https://marketplace.visualstudio.com/items?itemName=jackmacwindows.vscode-computercraft).
+
+### ghuconf
+
+Helper program to manage cc-updater settings. You can do the same thing with `set` and `get` programs, but this one is just a bit nicer since it is specific for `ghu.` settings.
+
+#### All Settings
+
+* `base` - the root folder for cc-updater. Changing the value is not supported/tested
+* `autoUpdate` - Automatically run `ghuupdate` in `startup.lua`
+* `autoRun` - Automatically run any `.lua` files in `/autoruns` for each cc-updater repo
+* `coreRepo` - The Github ref for the `cc-updater` repo. Changing the value is not supported/tested
+* `extraRepos` - A list of subscribed Github repos
+
+#### Examples
+
+* `ghuconf list` will list all `ghu.` settings
+* `ghuconf get extraRepo` will list all subscribed Github repos
+* `ghuconf help autoUpdate` will print out the help for the `ghu.autoUpdate` setting
+* `ghuconf set autoRun false` will disable automatically running `/autoruns`
+* `ghuconf set autoUpdate default` will revert auto update to the default value (true)
+* `ghuconf add extraRepos example/test:/src` will subscribe to Github repo "example/test" with the path "/src"
+* `ghuconf remove extraRepos example/test:/src` will unsubscribe to Github repo "example/test" (does not delete files)
 
 ## Note About Caching
 
