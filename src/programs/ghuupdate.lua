@@ -31,18 +31,18 @@ local function updateRepo(repoString, rootPath, allowStartup)
 
     if manifest.dependencies ~= nil and #(manifest.dependencies) > 0 then
         print("..deps:" .. tostring(#(manifest.dependencies)))
-        print("..startdeps")
+        print("..startdeps:" .. repo .. base)
         for _, depRepo in ipairs(manifest.dependencies) do
             updateRepo(depRepo, rootPath, false)
         end
-        print("..enddeps")
+        print("..enddeps:" .. repo .. base)
     end
 
     for path, checksum in pairs(manifest.files) do
         if path == "startup.lua" and not allowStartup then
             error("Only coreRepo can set startup.lua")
         end
-        if checksum ~= localManifest[path] then
+        if checksum ~= localManifest.files[path] then
             print("..." .. path)
             if path == "startup.lua" then
                 ghu.download(baseURL .. path, ghu.root .. path)
