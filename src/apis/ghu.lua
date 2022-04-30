@@ -196,6 +196,15 @@ ghu.strBool = function(orig)
 end
 
 ---------------------------------------
+-- Merge a table into another
+---------------------------------------
+ghu.merge = function(dest, src)
+    for key, value in pairs(src) do
+        dest[key] = value
+    end
+end
+
+---------------------------------------
 -- Copy for lua tables
 ---------------------------------------
 ghu.copy = function(orig)
