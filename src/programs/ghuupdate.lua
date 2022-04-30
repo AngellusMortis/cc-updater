@@ -1,14 +1,13 @@
-local basePath = settings.get("ghu.base")
-local ghu = require(basePath .. "core/apis/ghu")
+local ghu = require(settings.get("ghu.base") .. "core/apis/ghu")
 
-local function updateRepo(repoString, basePath, allowStartup)
+local function updateRepo(repoString, rootPath, allowStartup)
     local repo, ref, base = ghu.parseRepo(repoString)
     local status = repo
-    if basePath == nil then
-        basePath = ghu.base .. repo
+    if rootPath == nil then
+        rootPath = ghu.base .. repo
     end
     destPath = base:gsub("/src", "")
-    basePath = basePath .. destPath
+    local basePath = rootPath .. destPath
     print("." .. repo)
     print("..ref:" .. ref .. ".path:" .. base)
     print("..dest:" .. basePath)
@@ -34,7 +33,7 @@ local function updateRepo(repoString, basePath, allowStartup)
         print("..deps:" .. tostring(#(manifest.dependencies)))
         print("..startdeps")
         for _, depRepo in ipairs(manifest.dependencies) do
-            updateRepo(depRepo, basePath, false)
+            updateRepo(depRepo, rootPath, false)
         end
         print("..enddeps")
     end
