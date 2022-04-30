@@ -24,6 +24,8 @@ ghuconf add extraRepos AngellusMortis/am-cc:/render
 
 You can optionally add `@{ref}` after the repo to pull a specific git ref (branch, tag or sha).
 
+You can find Github repos using `cc-updater` at by [searching Github](https://github.com/search?q=topic%3Acc-updater-package)
+
 ## Making New Repos
 
 Go to the [template repo](https://github.com/AngellusMortis/cc-updater-template) and click "Use this template" and create a public repository (private repos are not supported). Add your files the `src` directory and commit/push them. Github Actions will automatically generate a `src/manifest.json` whenever you commit to the default branch. After the `manifest.json` is made, you can use `ghuconf` to add the repo to your computer.
