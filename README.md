@@ -2,7 +2,7 @@
 
 Lightweight dependency manager for CC: Tweaked.
 
-The goal is to make a easier way to distribute code to multiple computers quickly and consistently. This is not designed to be a full blown package manager (maybe someday), but it does allow you to update modules from Github as well as automatically pull dependencies for them (no conflict resolution).
+The goal is to make an easier way to distribute code to multiple computers quickly and consistently. This is not designed to be a full-blown package manager (maybe someday), but it does allow you to update modules from Github as well as automatically pull dependencies for them (no conflict resolution).
 
 ## Install
 
@@ -24,7 +24,7 @@ ghuconf add extraRepos AngellusMortis/am-cc:/render
 
 You can optionally add `@{ref}` after the repo to pull a specific git ref (branch, tag or sha).
 
-## Making new Repos
+## Making New Repos
 
 Go to the [template repo](https://github.com/AngellusMortis/cc-updater-template) and click "Use this template" and create a public repository (private repos are not supported). Add your files the `src` directory and commit/push them. Github Actions will automatically generate a `src/manifest.json` whenever you commit to the default branch. After the `manifest.json` is made, you can use `ghuconf` to add the repo to your computer.
 

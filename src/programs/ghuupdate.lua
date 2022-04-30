@@ -39,7 +39,7 @@ local function updateRepo(repoString, basePath, allowStartup)
         print("..enddeps")
     end
 
-    for path, checksum in pairs(manifest) do
+    for path, checksum in pairs(manifest.files) do
         if path == "startup.lua" and not allowStartup then
             error("Only coreRepo can set startup.lua")
         end
