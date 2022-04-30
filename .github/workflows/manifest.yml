@@ -8,8 +8,13 @@ on:
       - master
     paths:
       - '**.lua'
-      - '!install.lua'
       - '**/help/*.txt'
+      - '**/deps.json'
+      - '!install.lua'
+
+env:
+  MODULES: |-
+    src
 
 jobs:
   manifest:
@@ -21,13 +26,20 @@ jobs:
 
     - name: Generate Manifest
       run: |-
-        cd ./src
-        bash $GITHUB_WORKSPACE/.bin/manifest.sh
+        for module in $MODULES; do
+          echo "Generate manifest for /${module}..."
+          cd ${GITHUB_WORKSPACE}/${module}
+          bash ${GITHUB_WORKSPACE}/.bin/manifest.sh
+        done
 
     - name: Commit Changes
       run: |-
         git config user.name github-actions
         git config user.email github-actions@github.com
-        git add $GITHUB_WORKSPACE/src/manifest.json
+
+        for module in $MODULES; do
+          git add ${GITHUB_WORKSPACE}/${module}/manifest.json
+        done
+
         git commit -m "Generate new manifest"
         git push
