@@ -90,88 +90,16 @@ ghu.parseRepo = function(repo)
 end
 
 ---------------------------------------
--- Add Module path
---
--- Helper function to add a search path to package.path to loading APIs
--- Everything is automatically prefix with /ghu/
---
--- path should be normally be Github {repoOwner}/{repoName}
--- General structure is /ghu/{repoOwner}/{repoName}/apis/
+-- Concatenate tables
 ---------------------------------------
-ghu.addModulePath = function(path)
-    expect(1, path, "string")
-    local modulePath = package.path
-    local basePath = ";" .. ghu.base .. path
-    modulePath = modulePath .. basePath .. "apis/?"
-    modulePath = modulePath .. basePath .. "apis/?.lua"
-    modulePath = modulePath .. basePath .. "apis/?/init.lua"
-    package.path = modulePath
-end
+ghu.tableConcat = function(src, new)
+    expect(1, src, "table")
+    expect(2, new, "table")
 
----------------------------------------
--- Add Shell path
---
--- Helper function to add a search path to shell.path for programs
--- Everything is automatically prefixed with /ghu/
---
--- path should be normally be Github {repoOwner}/{repoName}
--- General structure is
---
--- Follows the same structure as the base CC paths but prefixed with
--- /ghu/{repoOwner}/{repoName}/
----------------------------------------
-ghu.addShellPath = function(path)
-    expect(1, path, "string")
-    local shellPath = shell.path()
-    local basePath = ":" .. ghu.base .. path
-    help.setPath(help.path() .. basePath .. "help")
-    basePath = basePath  .. "programs/"
-
-    shellPath = shellPath .. basePath
-    if term.isColor() then
-        shellPath = shellPath .. basePath .. "advanced"
+    for _, v in ipairs(new) do
+        table.insert(src, v)
     end
-    if turtle then
-        shellPath = shellPath .. basePath .. "turtle"
-    else
-        shellPath = shellPath .. basePath .. "rednet"
-        shellPath = shellPath .. basePath .. "fun"
-        if term.isColor() then
-            shellPath = shellPath .. basePath .. "fun/advanced"
-        end
-    end
-    if pocket then
-        shellPath = shellPath .. basePath .. "pocket"
-    end
-    if commands then
-        shellPath = shellPath .. basePath .. "command"
-    end
-    if http then
-        shellPath = shellPath .. basePath .. "http"
-    end
-    shell.setPath(shellPath)
-end
-
----------------------------------------
--- Initializes default module paths
----------------------------------------
-ghu.initModulePaths = function()
-    ghu.addModulePath("core/")
-    for i, repoString in ipairs(ghu.extraRepos) do
-        local repo, _, path = ghu.parseRepo(repoString)
-        ghu.addModulePath(repo .. path)
-    end
-end
-
----------------------------------------
--- Initializes default shell paths
----------------------------------------
-ghu.initShellPaths = function()
-    ghu.addShellPath("core/")
-    for i, repoString in ipairs(ghu.extraRepos) do
-        local repo, _, path = ghu.parseRepo(repoString)
-        ghu.addShellPath(repo .. path)
-    end
+    return src
 end
 
 ---------------------------------------
@@ -268,19 +196,6 @@ ghu.strBool = function(orig)
 end
 
 ---------------------------------------
--- Concatenate tables
----------------------------------------
-ghu.tableConcat = function(src, new)
-    expect(1, src, "table")
-    expect(2, new, "table")
-
-    for _, v in ipairs(new) do
-        table.insert(src, v)
-    end
-    return src
-end
-
----------------------------------------
 -- Copy for lua tables
 ---------------------------------------
 ghu.copy = function(orig)
@@ -298,6 +213,151 @@ ghu.copy = function(orig)
     end
 
     return copy
+end
+
+---------------------------------------
+-- Get manifest for downloaded repo
+---------------------------------------
+ghu.readManifest = function(path)
+    local f = fs.open(ghu.base .. path .. "manifest", "r")
+    manifest = textutils.unserialize(f.readAll())
+    if manifest.files == nil then
+        manifest = {files=manifest}
+    end
+    f.close()
+
+    return manifest
+end
+
+---------------------------------------
+-- Get dependencies for downloaded repo
+---------------------------------------
+ghu.getDeps = function(path, manifest)
+    expect(1, path, "string")
+    local basePath = ghu.base .. path
+    if manifest == nil then
+        manifest = ghu.readManifest(path)
+    end
+
+    deps = {}
+    for _, repoString in ipairs(manifest.dependencies) do
+        local repo, _, base = ghu.parseRepo(repoString)
+        local modulePath = repo .. base
+        deps = ghu.tableConcat(deps, ghu.getDeps(modulePath))
+        deps[#deps + 1] = modulePath
+    end
+
+    return deps
+end
+
+---------------------------------------
+-- Add Module path
+--
+-- Helper function to add a search path to package.path to loading APIs
+-- Everything is automatically prefix with /ghu/
+--
+-- path should be normally be Github {repoOwner}/{repoName}
+-- General structure is /ghu/{repoOwner}/{repoName}/apis/
+---------------------------------------
+ghu.addModulePath = function(path)
+    expect(1, path, "string")
+    local modulePath = package.path
+    local basePath = ";" .. ghu.base .. path
+    modulePath = modulePath .. basePath .. "apis/?"
+    modulePath = modulePath .. basePath .. "apis/?.lua"
+    modulePath = modulePath .. basePath .. "apis/?/init.lua"
+    package.path = modulePath
+end
+
+---------------------------------------
+-- Add Shell path
+--
+-- Helper function to add a search path to shell.path for programs
+-- Everything is automatically prefixed with /ghu/
+--
+-- path should be normally be Github {repoOwner}/{repoName}
+-- General structure is
+--
+-- Follows the same structure as the base CC paths but prefixed with
+-- /ghu/{repoOwner}/{repoName}/
+---------------------------------------
+ghu.addShellPath = function(path)
+    expect(1, path, "string")
+    local shellPath = shell.path()
+    local basePath = ":" .. ghu.base .. path
+    help.setPath(help.path() .. basePath .. "help")
+    basePath = basePath  .. "programs/"
+
+    shellPath = shellPath .. basePath
+    if term.isColor() then
+        shellPath = shellPath .. basePath .. "advanced"
+    end
+    if turtle then
+        shellPath = shellPath .. basePath .. "turtle"
+    else
+        shellPath = shellPath .. basePath .. "rednet"
+        shellPath = shellPath .. basePath .. "fun"
+        if term.isColor() then
+            shellPath = shellPath .. basePath .. "fun/advanced"
+        end
+    end
+    if pocket then
+        shellPath = shellPath .. basePath .. "pocket"
+    end
+    if commands then
+        shellPath = shellPath .. basePath .. "command"
+    end
+    if http then
+        shellPath = shellPath .. basePath .. "http"
+    end
+    shell.setPath(shellPath)
+end
+
+---------------------------------------
+-- Initializes default module paths
+---------------------------------------
+ghu.initModulePaths = function()
+    ghu.addModulePath("core/")
+
+    local loadedModules = {["core/"]=true}
+    for i, repoString in ipairs(ghu.extraRepos) do
+        local repo, _, path = ghu.parseRepo(repoString)
+        local modulePath = repo .. path
+        if loadedModules[modulePath] == nil then
+            ghu.addModulePath(modulePath)
+            loadedModules[modulePath] = true
+        end
+
+        local deps = ghu.getDeps(modulePath)
+        for _, dep in ipairs(deps) do
+            if loadedModules[dep] == nil then
+                ghu.addModulePath(dep)
+                loadedModules[dep] = true
+            end
+        end
+    end
+end
+
+---------------------------------------
+-- Initializes default shell paths
+---------------------------------------
+ghu.initShellPaths = function()
+    ghu.addShellPath("core/")
+
+    local loadedModules = {["core/"]=true}
+    for i, repoString in ipairs(ghu.extraRepos) do
+        local repo, _, path = ghu.parseRepo(repoString)
+        local modulePath = repo .. path
+        if loadedModules[modulePath] == nil then
+            ghu.addShellPath(modulePath)
+            loadedModules[modulePath] = true
+        end
+
+        local deps = ghu.getDeps(modulePath)
+        for _, dep in ipairs(deps) do
+            ghu.addShellPath(dep)
+        end
+    end
 end
 
 ---------------------------------------
