@@ -3,7 +3,7 @@
     "startup.lua": "12d8a14c0dc57300f4c3d01b5e0fa9fb1a27d2caf0c32b041022af17aa6443ee",
     "apis/ghu.lua": "4af4ab99c0a7c6fa32cbf0955906747a4b285ebf7ed6a58778b9aad28801c958",
     "programs/ghuconf.lua": "66b1d3a0b2379ea0a9a0ccb3bf3f023f61cd653a6a5c03fb0467e007c9ac02dc",
-    "programs/ghuupdate.lua": "95446d6dc3195fbe507e282b7910aa50d55f8a37815435579f1c770fd31427ac",
+    "programs/ghuupdate.lua": "4159db962e844fbf09b2d01827bccd6d8631bd748289dee83d0ec189bbd2b290",
     "programs/ghureload.lua": "6fb665c40e60b51de5701cc89bb0ca7b1ba691b6bb881e6a9d4a0a3ccb80d019"
   },
   "dependencies": []
