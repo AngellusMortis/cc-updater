@@ -228,6 +228,11 @@ end
 -- Get manifest for downloaded repo
 ---------------------------------------
 ghu.readManifest = function(path)
+    local manifestPath = ghu.base .. path .. "manifest"
+    if not fs.exists(manifestPath) then
+        return {files={}}
+    end
+
     local f = fs.open(ghu.base .. path .. "manifest", "r")
     manifest = textutils.unserialize(f.readAll())
     if manifest.files == nil then
