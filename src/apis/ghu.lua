@@ -191,6 +191,7 @@ local function updateRepo(repoString, isCore)
         print("..enddeps:" .. repo .. base)
     end
 
+    local downloadCount = 0
     for path, checksum in pairs(manifest.files) do
         if path == "startup.lua" and not isCore then
             error("Only coreRepo can set startup.lua")
@@ -202,8 +203,10 @@ local function updateRepo(repoString, isCore)
             else
                 core.download(baseURL .. path, basePath .. path)
             end
+            downloadCount = downloadCount + 1
         end
     end
+    print("..total: " .. tostring(downloadCount))
 
     writeManifest(repo, manifest)
 end
