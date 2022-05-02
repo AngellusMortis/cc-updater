@@ -55,6 +55,35 @@ ghu.s = core.makeSettingWrapper(s)
 _G.ghuStartupRan = false
 
 
+---Gets disk path for repo
+---@param repo repo/module
+---@param base relative path in repo
+---@return string
+local function getRepoPath(repo, base)
+    v.expect(1, repo, "string")
+
+    v.expect(1, repo, "string")
+
+    local path = ghu.p.ext .. repo
+    if repo == "core" then
+        path = ghu.p.core
+        base = ""
+    end
+
+    local base = base:gsub("/src", "")
+    if base:sub(1, 1) == "/" then
+        base = base:sub(2)
+    end
+    if path:sub(#path, #path) ~= "/" then
+        path = path .. "/"
+    end
+    path = path .. base
+    if path:sub(#path, #path) ~= "/" then
+        path = path .. "/"
+    end
+    return path
+end
+
 ---Parse Github repo string
 ---
 ---Format is `{owner}/{repoName}(@{ref})?(:{base}?`
@@ -87,42 +116,26 @@ local function parseRepo(repoString)
         repo = parts[1]
         ref = parts[2]
     end
-
-    return repo, ref, base
-end
-
----Gets disk path for repo
----@param repo repo/module
----@return string
-local function getRepoPath(repo)
-    v.expect(1, repo, "string")
-
-    local path = ghu.p.ext .. repo
-    if repo == "core" then
-        path = ghu.p.core
-    end
-    if path:sub(#path, #path) ~= "/" then
-        path = path .. "/"
-    end
-    return path
+    return getRepoPath(repo, base), repo, ref, base
 end
 
 ---Get manifest path for downloaded repo
----@param repo repo/module
+---@param repoString repo/module
 ---@return string
-local function getManifestPath(repo)
-    v.expect(1, repo, "string")
+local function getManifestPath(repoString)
+    v.expect(1, repoString, "string")
 
-    return getRepoPath(repo) .. "manifest"
+    local path = parseRepo(repoString)
+    return path .. "manifest"
 end
 
 ---Get manifest for downloaded repo on disk
----@param repo repo/module
+---@param repoString repo/module
 ---@return table
-local function readManifest(repo)
-    v.expect(1, repo, "string")
+local function readManifest(repoString)
+    v.expect(1, repoString, "string")
 
-    local manifestPath = getManifestPath(repo)
+    local manifestPath = getManifestPath(repoString)
     if not fs.exists(manifestPath) then
         return {files={}}
     end
@@ -138,12 +151,12 @@ local function readManifest(repo)
 end
 
 ---Write manifest for downloaded repo on disk
----@param repo repo/module
+---@param repoString repo/module
 ---@param manifest manifest table
-local function writeManifest(repo, manifest)
-    v.expect(1, repo, "string")
+local function writeManifest(repoString, manifest)
+    v.expect(1, repoString, "string")
 
-    local manifestPath = getManifestPath(repo)
+    local manifestPath = getManifestPath(repoString)
     if fs.exists(manifestPath) then
         fs.delete(manifestPath)
     end
@@ -161,26 +174,14 @@ local function updateRepo(repoString, isCore)
         isCore = false
     end
 
-    local repo, ref, base = ghu.parseRepo(repoString)
-    local rootPath
-    if isCore then
-        rootPath = ghu.getRepoPath("core")
-    else
-        rootPath = ghu.getRepoPath(repo)
-    end
-    local subPath = base:gsub("/src", "")
-    if subPath:sub(1, 1) == "/" then
-        subPath = subPath:sub(2)
-    end
-    local basePath = rootPath .. subPath
-
+    local basePath, repo, ref, base = parseRepo(repoString)
     print("." .. repo)
     print("..ref:" .. ref .. ".path:" .. base)
     print("..dest:" .. basePath)
 
     local baseURL = "https://raw.githubusercontent.com/" .. repo .. "/" .. ref .. base .. "/"
     local manifest = core.getJSON(baseURL .. "manifest.json")
-    local localManifest = ghu.readManifest(isCore and "core" or repo)
+    local localManifest = readManifest(isCore and "core" or repoString)
 
     local downloadCount = 0
     local repoCount = 1
@@ -211,19 +212,19 @@ local function updateRepo(repoString, isCore)
     end
     print("..total: " .. tostring(downloadCount))
 
-    writeManifest(isCore and "core" or repo, manifest)
+    writeManifest(isCore and "core" or repoString, manifest)
     return downloadCount, repoCount
 end
 
 ---Get dependencies for downloaded repo
----@param repo repo/module
+---@param repoString repo/module
 ---@param manifest Optional manifest to use
 ---@return table
-function getDeps(repo, manifest)
-    v.expect(1, repo, "string")
+function getDeps(repoString, manifest)
+    v.expect(1, repoString, "string")
     v.expect(2, manifest, "table", "nil")
     if manifest == nil then
-        manifest = readManifest(repo)
+        manifest = readManifest(repoString)
     end
 
     deps = {}
@@ -231,10 +232,9 @@ function getDeps(repo, manifest)
         return deps
     end
 
-    for _, repoString in ipairs(manifest.dependencies) do
-        local repo, _, _ = parseRepo(repoString)
-        deps = core.concat(deps, getDeps(repo))
-        deps[#deps + 1] = repo
+    for _, depString in ipairs(manifest.dependencies) do
+        deps = core.concat(deps, getDeps(depString))
+        deps[#deps + 1] = depString
     end
 
     return deps
@@ -244,8 +244,8 @@ end
 local function getAutoruns()
     local autoruns = {}
     for i, repoString in ipairs(ghu.s.extraRepos.get()) do
-        local repo, _, _ = parseRepo(repoString)
-        local autorunPath = getRepoPath(repo) .. "autorun/"
+        local path = parseRepo(repoString)
+        local autorunPath = path .. "autorun/"
         autoruns = core.concat(autoruns, fs.find(autorunPath .. "*.lua"))
     end
     return autoruns
@@ -256,12 +256,11 @@ end
 ---Helper function to add a search path to `shell.path` for repo
 ---
 ---Follows the same structure as the base CC paths
----@param repo repo/module
-local function addShellPath(repo)
-    v.expect(1, repo, "string")
+---@param repoString repo/module
+local function addShellPath(repoString)
+    v.expect(1, repoString, "string")
 
-    local path = getRepoPath(repo)
-
+    local path = parseRepo(repoString)
     local shellPath = shell.path()
     local basePath = ":" .. path
     help.setPath(help.path() .. basePath .. "help")
@@ -306,13 +305,12 @@ local function initShellPaths(force)
     addShellPath("core")
     local loadedModules = {["core"]=true}
     for i, repoString in ipairs(ghu.s.extraRepos.get()) do
-        local repo, _, _ = parseRepo(repoString)
-        if loadedModules[repo] == nil then
-            addShellPath(repo)
-            loadedModules[repo] = true
+        if loadedModules[repoString] == nil then
+            addShellPath(repoString)
+            loadedModules[repoString] = true
         end
 
-        local deps = getDeps(repo)
+        local deps = getDeps(repoString)
         for _, dep in ipairs(deps) do
             addShellPath(dep)
         end
@@ -322,12 +320,13 @@ end
 ---Add Module path
 --
 -- Helper function to add a search path to package.path for repos
----@param repo repo/module
-local function addModulePath(repo)
-    v.expect(1, repo, "string")
+---@param repoString repo/module
+local function addModulePath(repoString)
+    v.expect(1, repoString, "string")
 
+    local path = parseRepo(repoString)
     local modulePath = package.path
-    local basePath = ";" .. getRepoPath(repo)
+    local basePath = ";" .. path
     modulePath = modulePath .. basePath .. "apis/?"
     modulePath = modulePath .. basePath .. "apis/?.lua"
     modulePath = modulePath .. basePath .. "apis/?/init.lua"
@@ -348,13 +347,12 @@ local function initModulePaths(force)
     addModulePath("core")
     local loadedModules = {["core"]=true}
     for i, repoString in ipairs(ghu.s.extraRepos.get()) do
-        local repo, _, _ = parseRepo(repoString)
-        if loadedModules[repo] == nil then
-            addModulePath(repo)
-            loadedModules[repo] = true
+        if loadedModules[repoString] == nil then
+            addModulePath(repoString)
+            loadedModules[repoString] = true
         end
 
-        local deps = getDeps(repo)
+        local deps = getDeps(repoString)
         for _, dep in ipairs(deps) do
             addModulePath(dep)
         end
