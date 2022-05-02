@@ -6,11 +6,11 @@ local completion = require("cc.shell.completion")
 
 local ghu = require(settings.get("ghu.base") .. "core/apis/ghu")
 
-if ghu.s.autoUpdate.value then
+if ghu.s.autoUpdate.get() then
     shell.run("ghuupdate")
 end
 
-if ghu.s.autoRun.value then
+if ghu.s.autoRun.get() then
     for _, autorun in ipairs(ghu.getAutoruns()) do
         shell.run(autorun)
     end
