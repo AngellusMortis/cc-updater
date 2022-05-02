@@ -1,86 +1,88 @@
-local expect = require("cc.expect").expect
-local ghu = {}
-ghu.root = "/"
-ghu.base = "/ghu/"
-if fs.exists("/disk/ghu") then
-    ghu.root = "/disk/"
-    ghu.base = "/disk/ghu/"
-end
+local v = require("cc.expect")
 
-ghu.s = {}
-ghu.s.base = {
+local ghu = {}
+ghu.p = {}
+ghu.p.root = "/"
+ghu.p.base = "/ghu/"
+if fs.exists("/disk/ghu") then
+    ghu.p.base = "/disk/ghu/"
+end
+ghu.p.base = settings.get("ghu.base", "/ghu/")
+if string.sub(ghu.p.base, 1, string.len(5))== "/disk" then
+    ghu.p.root = "/disk/"
+end
+ghu.p.core = ghu.p.base .. "core/"
+ghu.p.ext = ghu.p.base .. "ext/"
+
+core = require(ghu.p.core .. "apis/am/core")
+
+local modulesInitialized = pcall(function () require("am.core") end)
+local shellInitialized = shell.resolveProgram("ghuconf")
+local s = {}
+s = {}
+s.base = {
     name = "ghu.base",
-    default = ghu.base,
+    default = ghu.p.base,
     type = "string",
     description = "The base path for cc-updater. Recommendeded not to change."
 }
-ghu.s.autoUpdate = {
+s.autoUpdate = {
     name="ghu.autoUpdate",
     default = true,
     type = "boolean",
     description = "Auto-update cc-updater repos on computer boot."
 }
-ghu.s.autoRun = {
+s.autoRun = {
     name="ghu.autoRun",
     default = true,
     type = "boolean",
     description = "Allow extra repos to provide auto-run programs."
 }
-ghu.s.coreRepo = {
+s.coreRepo = {
     name = "ghu.coreRepo",
     default = "AngellusMortis/cc-updater@v1:/src",
     type = "string",
     description = "Core repo for cc-updater. Recommended not to change."
 }
-ghu.s.extraRepos = {
+s.extraRepos = {
     name = "ghu.extraRepos",
     default = {},
     type = "table",
     description = "List of extra cc-updater repos."
 }
+ghu.s = core.makeSettingWrapper(s)
+-- hack for ghureload to ensure startup is only loaded once
+_G.ghuStartupRan = false
 
-settings.define(ghu.s.base.name, ghu.s.base)
-settings.define(ghu.s.autoUpdate.name, ghu.s.autoUpdate)
-settings.define(ghu.s.autoRun.name, ghu.s.autoRun)
-settings.define(ghu.s.coreRepo.name, ghu.s.coreRepo)
-settings.define(ghu.s.extraRepos.name, ghu.s.extraRepos)
 
-ghu.autoUpdate = settings.get(ghu.s.autoUpdate.name)
-ghu.autoRun = settings.get(ghu.s.autoRun.name)
-ghu.coreRepo = settings.get(ghu.s.coreRepo.name)
-ghu.extraRepos = settings.get(ghu.s.extraRepos.name)
+---Parse Github repo string
+---
+---Format is `{owner}/{repoName}(@{ref})?(:{base}?`
+---
+---If `ref` is left out, it defaults to `master`
+---If `base` is left out, it defaults to `/src`
+---@param repoString Github repo string
+---@return repo, ref, base
+local function parseRepo(repoString)
+    v.expect(1, repoString, "string")
 
-if fs.exists(settings.get(ghu.s.base.name)) then
-    ghu.base = settings.get(ghu.s.base.name)
-end
-if string.sub(settings.get(ghu.s.base.name), 1, string.len(5))== "/disk" then
-    ghu.root = "/disk/"
-end
-
-settings.set(ghu.s.base.name, ghu.base)
-
----------------------------------------
--- Parse Github Repo
----------------------------------------
-ghu.parseRepo = function(repo)
-    expect(1, repo, "string")
-    local parts = ghu.split(repo, ":")
-
+    local parts = core.split(repoString, ":")
+    local repo = parts[1]
     local base = "/"
     if #parts == 1 then
-        base = "/"
+        base = "/src"
     elseif #parts > 2 then
-        error("Bad repo: " .. repo)
+        error("Bad repo path: " .. repoString)
     else
         repo = parts[1]
         base = parts[2] .. "/"
     end
 
-    parts = ghu.split(repo, "@")
+    parts = core.split(repo, "@")
     if #parts == 1 then
         ref = "master"
     elseif #parts > 2 then
-        error("Bad repo: " .. repo)
+        error("Bad repo ref: " .. repoString)
     else
         repo = parts[1]
         ref = parts[2]
@@ -89,151 +91,43 @@ ghu.parseRepo = function(repo)
     return repo, ref, base
 end
 
----------------------------------------
--- Concatenate tables
----------------------------------------
-ghu.tableConcat = function(src, new)
-    expect(1, src, "table")
-    expect(2, new, "table")
+---Gets disk path for repo
+---@param repo repo/module
+---@return string
+local function getRepoPath(repo)
+    v.expect(1, repo, "string")
 
-    for _, v in ipairs(new) do
-        table.insert(src, v)
+    local path = ghu.p.ext .. repo
+    if repo == "core" then
+        path = ghu.p.core
     end
-    return src
+    if path:sub(#path, #path) ~= "/" then
+        path = path .. "/"
+    end
+    return path
 end
 
----------------------------------------
--- Splits a string
----------------------------------------
-ghu.split = function(str, sep)
-    expect(1, str, "string")
-    expect(2, sep, "string")
+---Get manifest path for downloaded repo
+---@param repo repo/module
+---@return string
+local function getManifestPath(repo)
+    v.expect(1, repo, "string")
 
-    if sep == nil then
-        sep = ","
-    end
-    local t={}
-    for str in string.gmatch(str, "([^"..sep.."]+)") do
-        table.insert(t, str)
-    end
-    return t
+    return getRepoPath(repo) .. "manifest"
 end
 
----------------------------------------
--- Performs HTTP GET and checks reponse
----------------------------------------
-ghu.getAndCheck = function(url)
-    expect(1, url, "string")
+---Get manifest for downloaded repo on disk
+---@param repo repo/module
+---@return table
+local function readManifest(repo)
+    v.expect(1, repo, "string")
 
-    url = url .. "?ts=" .. os.time(os.date("!*t"))
-    local r = http.get(url)
-    if r == nil then
-        error(string.format("Bad HTTP Response: %s", url))
-    end
-    local rc, _ = r.getResponseCode()
-    if rc ~= 200 then
-        error(string.format("Bad HTTP code: %d", rc))
-    end
-    return r
-end
-
----------------------------------------
--- Download File
----------------------------------------
-ghu.download = function(url, path)
-    expect(1, url, "string")
-    expect(2, path, "string")
-
-    if (fs.exists(path)) then
-        fs.delete(path)
-    end
-
-    local r = ghu.getAndCheck(url)
-    local f = fs.open(path, 'w')
-    f.write(r.readAll())
-    f.close()
-end
-
----------------------------------------
--- Gets JSON from URL
----------------------------------------
-ghu.getJSON = function(url)
-    expect(1, url, "string")
-
-    local r = ghu.getAndCheck(url)
-    return textutils.unserializeJSON(r.readAll())
-end
-
-
-local boolMap = {
-    ["true"] = true,
-    ["yes"] = true,
-    ["1"] = true,
-    ["y"] = true,
-    ["t"] = true,
-    ["false"] = false,
-    ["no"] = false,
-    ["0"] = false,
-    ["n"] = false,
-    ["f"] = false,
-}
-
----------------------------------------
--- Parses string into boolean
----------------------------------------
-ghu.strBool = function(orig)
-    if type(orig) == "boolean" then
-        return orig
-    end
-    expect(1, orig, "string")
-
-    local value = orig:lower()
-    value = boolMap[value]
-    if value == nil then
-        error(string.format("Unexpected string bool value: %s", orig))
-    end
-    return value
-end
-
----------------------------------------
--- Merge a table into another
----------------------------------------
-ghu.merge = function(dest, src)
-    for key, value in pairs(src) do
-        dest[key] = value
-    end
-end
-
----------------------------------------
--- Copy for lua tables
----------------------------------------
-ghu.copy = function(orig)
-    local orig_type = type(orig)
-    local copy
-
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in next, orig, nil do
-            copy[ghu.copy(orig_key)] = ghu.copy(orig_value)
-        end
-        setmetatable(copy, ghu.copy(getmetatable(orig)))
-    else -- number, string, boolean, etc
-        copy = orig
-    end
-
-    return copy
-end
-
----------------------------------------
--- Get manifest for downloaded repo
----------------------------------------
-ghu.readManifest = function(path)
-    local manifestPath = ghu.base .. path .. "manifest"
+    local manifestPath = getManifestPath(repo)
     if not fs.exists(manifestPath) then
         return {files={}}
     end
 
-    local f = fs.open(ghu.base .. path .. "manifest", "r")
+    local f = fs.open(manifestPath, "r")
     manifest = textutils.unserialize(f.readAll())
     if manifest.files == nil then
         manifest = {files=manifest}
@@ -243,62 +137,126 @@ ghu.readManifest = function(path)
     return manifest
 end
 
----------------------------------------
--- Get dependencies for downloaded repo
----------------------------------------
-ghu.getDeps = function(path, manifest)
-    expect(1, path, "string")
-    local basePath = ghu.base .. path
+---Write manifest for downloaded repo on disk
+---@param repo repo/module
+---@param manifest manifest table
+local function writeManifest(repo, manifest)
+    v.expect(1, repo, "string")
+
+    local manifestPath = getManifestPath(repo)
+    if fs.exists(manifestPath) then
+        fs.delete(manifestPath)
+    end
+
+    local f = fs.open(manifestPath, "w")
+    f.write(textutils.serialize(manifest))
+    f.close()
+end
+
+---Downloads and updates a repo
+local function updateRepo(repoString, isCore)
+    v.expect(1, repoString, "string")
+    v.expect(2, isCore, "boolean", "nil")
+    if isCore == nil then
+        isCore = false
+    end
+
+    local repo, ref, base = ghu.parseRepo(repoString)
+    local rootPath
+    if isCore then
+        rootPath = ghu.getRepoPath("core")
+    else
+        rootPath = ghu.getRepoPath(repo)
+    end
+    local subPath = base:gsub("/src/", "")
+    if subPath:sub(1, 1) == "/" then
+        subPath = subPath:sub(2)
+    end
+    local basePath = rootPath .. subPath
+
+    print("." .. repo)
+    print("..ref:" .. ref .. ".path:" .. base)
+    print("..dest:" .. basePath)
+
+    local baseURL = "https://raw.githubusercontent.com/" .. repo .. "/" .. ref .. base
+    local manifest = core.getJSON(baseURL .. "manifest.json")
+    local localManifest = ghu.readManifest(repo)
+
+    if manifest.dependencies ~= nil and #(manifest.dependencies) > 0 then
+        print("..deps:" .. tostring(#(manifest.dependencies)))
+        print("..startdeps:" .. repo .. base)
+        for _, depRepo in ipairs(manifest.dependencies) do
+            updateRepo(depRepo)
+        end
+        print("..enddeps:" .. repo .. base)
+    end
+
+    for path, checksum in pairs(manifest.files) do
+        if path == "startup.lua" and not isCore then
+            error("Only coreRepo can set startup.lua")
+        end
+        if checksum ~= localManifest.files[path] then
+            print("..." .. path)
+            if path == "startup.lua" then
+                core.download(baseURL .. path, ghu.p.root .. path)
+            else
+                core.download(baseURL .. path, basePath .. path)
+            end
+        end
+    end
+
+    writeManifest(repo, manifest)
+end
+
+---Get dependencies for downloaded repo
+---@param repo repo/module
+---@param manifest Optional manifest to use
+---@return table
+function getDeps(repo, manifest)
+    v.expect(1, repo, "string")
+    v.expect(2, manifest, "table", "nil")
     if manifest == nil then
-        manifest = ghu.readManifest(path)
+        manifest = readManifest(repo)
     end
 
     deps = {}
+    if manifest.dependencies == nil then
+        return deps
+    end
+
     for _, repoString in ipairs(manifest.dependencies) do
-        local repo, _, base = ghu.parseRepo(repoString)
-        local modulePath = repo .. base
-        deps = ghu.tableConcat(deps, ghu.getDeps(modulePath))
-        deps[#deps + 1] = modulePath
+        local repo, _, _ = parseRepo(repoString)
+        deps = core.concat(deps, getDeps(repo))
+        deps[#deps + 1] = repo
     end
 
     return deps
 end
 
----------------------------------------
--- Add Module path
---
--- Helper function to add a search path to package.path to loading APIs
--- Everything is automatically prefix with /ghu/
---
--- path should be normally be Github {repoOwner}/{repoName}
--- General structure is /ghu/{repoOwner}/{repoName}/apis/
----------------------------------------
-ghu.addModulePath = function(path)
-    expect(1, path, "string")
-    local modulePath = package.path
-    local basePath = ";" .. ghu.base .. path
-    modulePath = modulePath .. basePath .. "apis/?"
-    modulePath = modulePath .. basePath .. "apis/?.lua"
-    modulePath = modulePath .. basePath .. "apis/?/init.lua"
-    package.path = modulePath
+---Gets autorun programs for subscribed repos
+local function getAutoruns()
+    local autoruns = {}
+    for i, repoString in ipairs(ghu.s.extraRepos.get()) do
+        local repo, _, _ = parseRepo(repoString)
+        local autorunPath = getRepoPath(repo) .. "autorun/"
+        autoruns = core.concat(autoruns, fs.find(autorunPath .. "*.lua"))
+    end
+    return autoruns
 end
 
----------------------------------------
--- Add Shell path
---
--- Helper function to add a search path to shell.path for programs
--- Everything is automatically prefixed with /ghu/
---
--- path should be normally be Github {repoOwner}/{repoName}
--- General structure is
---
--- Follows the same structure as the base CC paths but prefixed with
--- /ghu/{repoOwner}/{repoName}/
----------------------------------------
-ghu.addShellPath = function(path)
-    expect(1, path, "string")
+---Adds repo to shell path
+---
+---Helper function to add a search path to `shell.path` for repo
+---
+---Follows the same structure as the base CC paths
+---@param repo repo/module
+local function addShellPath(repo)
+    v.expect(1, repo, "string")
+
+    local path = getRepoPath(repo)
+
     local shellPath = shell.path()
-    local basePath = ":" .. ghu.base .. path
+    local basePath = ":" .. path
     help.setPath(help.path() .. basePath .. "help")
     basePath = basePath  .. "programs/"
 
@@ -327,66 +285,90 @@ ghu.addShellPath = function(path)
     shell.setPath(shellPath)
 end
 
----------------------------------------
--- Initializes default module paths
----------------------------------------
-ghu.initModulePaths = function()
-    ghu.addModulePath("core/")
+-- Adds all subscribed repos to shell path
+local function initShellPaths(force)
+    v.expect(1, force, "boolean", "nil")
+    if force == nil then
+        force = false
+    end
 
-    local loadedModules = {["core/"]=true}
-    for i, repoString in ipairs(ghu.extraRepos) do
-        local repo, _, path = ghu.parseRepo(repoString)
-        local modulePath = repo .. path
-        if loadedModules[modulePath] == nil then
-            ghu.addModulePath(modulePath)
-            loadedModules[modulePath] = true
+    if shellInitialized and not force then
+        return
+    end
+
+    addShellPath("core")
+    local loadedModules = {["core"]=true}
+    for i, repoString in ipairs(ghu.s.extraRepos.get()) do
+        local repo, _, _ = parseRepo(repoString)
+        if loadedModules[repo] == nil then
+            addShellPath(repo)
+            loadedModules[repo] = true
         end
 
-        local deps = ghu.getDeps(modulePath)
+        local deps = getDeps(repo)
         for _, dep in ipairs(deps) do
-            if loadedModules[dep] == nil then
-                ghu.addModulePath(dep)
-                loadedModules[dep] = true
-            end
+            addShellPath(dep)
         end
     end
 end
 
----------------------------------------
--- Initializes default shell paths
----------------------------------------
-ghu.initShellPaths = function()
-    ghu.addShellPath("core/")
-
-    local loadedModules = {["core/"]=true}
-    for i, repoString in ipairs(ghu.extraRepos) do
-        local repo, _, path = ghu.parseRepo(repoString)
-        local modulePath = repo .. path
-        if loadedModules[modulePath] == nil then
-            ghu.addShellPath(modulePath)
-            loadedModules[modulePath] = true
-        end
-
-        local deps = ghu.getDeps(modulePath)
-        for _, dep in ipairs(deps) do
-            ghu.addShellPath(dep)
-        end
-    end
-end
-
----------------------------------------
--- Gets autorun programs
+---Add Module path
 --
--- Returns list of {ghu.extraRepos}/autorun/*.lua files
----------------------------------------
-ghu.getAutoruns = function()
-    local autoruns = {}
-    for i, repoString in ipairs(ghu.extraRepos) do
-        local repo, _, path = ghu.parseRepo(repoString)
-        local repoPath = ghu.base .. repo .. path .. "autorun/"
-        autoruns = ghu.tableConcat(autoruns, fs.find(repoPath .. "*.lua"))
-    end
-    return autoruns
+-- Helper function to add a search path to package.path for repos
+---@param repo repo/module
+local function addModulePath(repo)
+    v.expect(1, repo, "string")
+
+    local modulePath = package.path
+    local basePath = ";" .. getRepoPath(repo)
+    modulePath = modulePath .. basePath .. "apis/?"
+    modulePath = modulePath .. basePath .. "apis/?.lua"
+    modulePath = modulePath .. basePath .. "apis/?/init.lua"
+    package.path = modulePath
 end
+
+---Initializes default module paths for subscribe repos
+local function initModulePaths(force)
+    v.expect(1, force, "boolean", "nil")
+    if force == nil then
+        force = false
+    end
+
+    if modulesInitialized and not force then
+        return
+    end
+
+    addModulePath("core")
+    local loadedModules = {["core"]=true}
+    for i, repoString in ipairs(ghu.s.extraRepos.get()) do
+        local repo, _, _ = parseRepo(repoString)
+        if loadedModules[repo] == nil then
+            addModulePath(repo)
+            loadedModules[repo] = true
+        end
+
+        local deps = getDeps(repo)
+        for _, dep in ipairs(deps) do
+            addModulePath(dep)
+        end
+    end
+    modulesInitialized = true
+end
+
+ghu.parseRepo = parseRepo
+ghu.getRepoPath = getRepoPath
+ghu.getManifestPath = getManifestPath
+ghu.readManifest = readManifest
+ghu.writeManifest = writeManifest
+ghu.updateRepo = updateRepo
+ghu.getDeps = getDeps
+ghu.getAutoruns = getAutoruns
+ghu.addShellPath = addShellPath
+ghu.initShellPaths = initShellPaths
+ghu.addModulePath = addModulePath
+ghu.initModulePaths = initModulePaths
+
+initShellPaths()
+initModulePaths()
 
 return ghu

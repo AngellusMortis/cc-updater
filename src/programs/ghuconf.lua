@@ -1,7 +1,8 @@
 local ghu = require(settings.get("ghu.base") .. "core/apis/ghu")
+local core = require("am.core")
 
 local function printValue(name)
-    local value = settings.get(ghu.s[name].name)
+    local value = ghu.s[name].get()
     if name == "extraRepos" then
         print(#value .. " Extra Repo(s):")
         for i, repo in ipairs(value) do
@@ -71,26 +72,25 @@ local function main(op, settingName, value)
 
     if op == "set" then
         if value == "default" then
-            value = ghu.copy(ghu.s[settingName].default)
-        elseif settingName == "extraRepos" then
-            value = ghu.split(value)
-        elseif settingName == "autoUpdate" or settingName == "autoRun" then
-            value = ghu.strBool(value)
+            value = core.copy(ghu.s[settingName].default)
+        elseif ghu.s[settingName].type == "table" then
+            value = core.split(value)
+        elseif ghu.s[settingName].type == "boolean" then
+            value = core.strBool(value)
         end
 
-        settings.set(ghu.s[settingName].name, value)
-        settings.save()
+        ghu.s[settingName].set(value)
         printValue(settingName)
         return
     end
 
     if op == "add" or op == "remove" then
-        if settingName ~= "extraRepos" then
-            printError("Only supported on extraRepos setting")
+        if ghu.s[settingName].type ~= "table" then
+            printError("Only supported on table settings")
             return
         end
 
-        settingValue = settings.get(ghu.s[settingName].name)
+        settingValue = ghu.s[settingName].get()
         if op == "add" then
             settingValue[#settingValue+1] = value
         else
@@ -101,8 +101,7 @@ local function main(op, settingName, value)
                 end
             end
         end
-        settings.set(ghu.s[settingName].name, settingValue)
-        settings.save()
+        ghu.s[settingName].set(settingValue)
         printValue(settingName)
     end
 end
