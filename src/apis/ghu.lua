@@ -180,7 +180,7 @@ local function updateRepo(repoString, isCore)
 
     local baseURL = "https://raw.githubusercontent.com/" .. repo .. "/" .. ref .. base .. "/"
     local manifest = core.getJSON(baseURL .. "manifest.json")
-    local localManifest = ghu.readManifest(repo)
+    local localManifest = ghu.readManifest(isCore and "core" or repo)
 
     local downloadCount = 0
     local repoCount = 1
@@ -211,7 +211,7 @@ local function updateRepo(repoString, isCore)
     end
     print("..total: " .. tostring(downloadCount))
 
-    writeManifest(repo, manifest)
+    writeManifest(isCore and "core" or repo, manifest)
     return downloadCount, repoCount
 end
 
