@@ -182,16 +182,19 @@ local function updateRepo(repoString, isCore)
     local manifest = core.getJSON(baseURL .. "manifest.json")
     local localManifest = ghu.readManifest(repo)
 
+    local downloadCount = 0
+    local repoCount = 1
     if manifest.dependencies ~= nil and #(manifest.dependencies) > 0 then
         print("..deps:" .. tostring(#(manifest.dependencies)))
         print("..startdeps:" .. repo .. base)
         for _, depRepo in ipairs(manifest.dependencies) do
-            updateRepo(depRepo)
+            local depDownload, depCount = updateRepo(depRepo)
+            downloadCount = downloadCount + depDownload
+            repoCount = repoCount + depCount
         end
         print("..enddeps:" .. repo .. base)
     end
 
-    local downloadCount = 0
     for path, checksum in pairs(manifest.files) do
         if path == "startup.lua" and not isCore then
             error("Only coreRepo can set startup.lua")
@@ -209,7 +212,7 @@ local function updateRepo(repoString, isCore)
     print("..total: " .. tostring(downloadCount))
 
     writeManifest(repo, manifest)
-    return downloadCount
+    return downloadCount, repoCount
 end
 
 ---Get dependencies for downloaded repo

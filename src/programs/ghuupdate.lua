@@ -1,11 +1,11 @@
 local ghu = require(settings.get("ghu.base") .. "core/apis/ghu")
 
 print("Updating repos...")
-local repoCount = 1
-local count = ghu.updateRepo(ghu.s.coreRepo.get(), true)
+local count, repoCount = ghu.updateRepo(ghu.s.coreRepo.get(), true)
 for _, repoString in pairs(ghu.s.extraRepos.get()) do
-    count = count + ghu.updateRepo(repoString)
-    repoCount = repoCount + 1
+    local subCount, subRepo = ghu.updateRepo(repoString)
+    count = count + subCount
+    repoCount = repoCount + subRepo
 end
 print(string.format(
     "Updated %s file%s from %s repo%s",
