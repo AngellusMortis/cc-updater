@@ -168,7 +168,7 @@ local function updateRepo(repoString, isCore)
     else
         rootPath = ghu.getRepoPath(repo)
     end
-    local subPath = base:gsub("/src/", "")
+    local subPath = base:gsub("/src", "")
     if subPath:sub(1, 1) == "/" then
         subPath = subPath:sub(2)
     end
@@ -178,7 +178,7 @@ local function updateRepo(repoString, isCore)
     print("..ref:" .. ref .. ".path:" .. base)
     print("..dest:" .. basePath)
 
-    local baseURL = "https://raw.githubusercontent.com/" .. repo .. "/" .. ref .. base
+    local baseURL = "https://raw.githubusercontent.com/" .. repo .. "/" .. ref .. base .. "/"
     local manifest = core.getJSON(baseURL .. "manifest.json")
     local localManifest = ghu.readManifest(repo)
 
