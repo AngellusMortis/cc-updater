@@ -2,7 +2,7 @@
   "files": {
     "init.lua": "265f3b80b78482b5ccd8cb3a0885298b30e34875c0135034041a36d7b24662c4",
     "startup.lua": "cfc4b4058f127278ad7b1047ea7912d7f8f01d00bf69d80db5a1c00f09c0f7e9",
-    "apis/ghu.lua": "1722bb42c2c410580080214af980489d92ace256f34b3495c6583a170a8aacdf",
+    "apis/ghu.lua": "cd3a40456396bbdef7898914a7bee9074771fed80adcdc16b4d0076cf9180b53",
     "apis/am/core.lua": "1ac7450c131df8b5f411b37ed2744ddc2c469131efe3c013e3a7e3469698229e",
     "programs/ghuconf.lua": "31a248b1630af9b7dad5e728de6f6413613c7b073d5da0bbcdb804c88cf78de0",
     "programs/ghuupdate.lua": "d94cccddf23850d8f2e120193ebc7e868a1ca66fbd798dbe65ffab05341d4fd7",
