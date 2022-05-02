@@ -209,6 +209,7 @@ local function updateRepo(repoString, isCore)
     print("..total: " .. tostring(downloadCount))
 
     writeManifest(repo, manifest)
+    return downloadCount
 end
 
 ---Get dependencies for downloaded repo
