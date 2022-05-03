@@ -1,9 +1,4 @@
 {
-    "Lua.diagnostics.disable": [
-        "unused-local",
-        "lowercase-global",
-        "unused-function"
-    ],
     "Lua.diagnostics.severity": {
         "redefined-local": "Warning"
     },

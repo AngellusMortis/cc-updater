@@ -14,7 +14,7 @@ end
 ghu.p.core = ghu.p.base .. "core/"
 ghu.p.ext = ghu.p.base .. "ext/"
 
-core = require(ghu.p.core .. "apis/am/core")
+local core = require(ghu.p.core .. "apis/am/core")
 
 local modulesInitialized = pcall(function () require("am.core") end)
 local shellInitialized = shell.resolveProgram("ghuconf")
@@ -104,6 +104,7 @@ local function parseRepo(repoString)
 
     local parts = core.split(repoString, ":")
     local repo = parts[1]
+    local ref = "master"
     local base = "/"
     if #parts == 1 then
         base = "/src"
@@ -226,7 +227,7 @@ end
 ---@param repoString string repo/module
 ---@param manifest? table Optional manifest to use
 ---@return table
-function getDeps(repoString, manifest)
+local function getDeps(repoString, manifest)
     v.expect(1, repoString, "string")
     v.expect(2, manifest, "table", "nil")
     if manifest == nil then
@@ -237,7 +238,7 @@ function getDeps(repoString, manifest)
         return
     end
 
-    deps = {}
+    local deps = {}
     if manifest.dependencies == nil then
         return deps
     end

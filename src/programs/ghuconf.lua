@@ -90,7 +90,7 @@ local function main(op, settingName, value)
             return
         end
 
-        settingValue = ghu.s[settingName].get()
+        local settingValue = ghu.s[settingName].get()
         if op == "add" then
             settingValue[#settingValue+1] = value
         else
