@@ -11,6 +11,7 @@ on:
       - '**/help/*.txt'
       - '**/deps.json'
       - '!install.lua'
+      - '!**.min.lua'
 
 env:
   MODULES: |-
@@ -38,7 +39,8 @@ jobs:
         git config user.email github-actions@github.com
 
         for module in $MODULES; do
-          git add ${GITHUB_WORKSPACE}/${module}/manifest.json
+          git add ${GITHUB_WORKSPACE}/${module}/manifest.json || true
+          git add *.min.lua || true
         done
 
         git commit -m "Generate new manifest"
