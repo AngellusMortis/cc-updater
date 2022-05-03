@@ -8,6 +8,7 @@ on:
       - master
     paths:
       - .github/workflows/manifest.yml
+      - .bin/manifest.sh
       - '**.lua'
       - '**/help/*.txt'
       - '**/deps.json'
