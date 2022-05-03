@@ -1,6 +1,10 @@
 local ghu = require(settings.get("ghu.base") .. "core/apis/ghu")
 
-print("Updating repos...")
+if ghu.s.minified.get() then
+    print("Updating repos (min)...")
+else
+    print("Updating repos (full)...")
+end
 local count, repoCount = ghu.updateRepo("core")
 for _, repoString in pairs(ghu.s.extraRepos.get()) do
     local subCount, subRepo = ghu.updateRepo(repoString)
@@ -12,3 +16,9 @@ print(string.format(
     count, count ~= 1 and "s" or "",
     repoCount, repoCount ~= 1 and "s" or ""
 ))
+if count > 1 then
+    local oldAutoUpdate = ghu.s.autoUpdate.get()
+    ghu.s.autoUpdate.set(false)
+    shell.run("ghureload")
+    ghu.s.autoUpdate.set(oldAutoUpdate)
+end

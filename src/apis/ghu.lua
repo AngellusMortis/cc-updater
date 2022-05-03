@@ -50,6 +50,12 @@ s.extraRepos = {
     type = "table",
     description = "List of extra cc-updater repos."
 }
+s.minified = {
+    name = "ghu.minified",
+    default = true,
+    type = "boolean",
+    description = "Download minfied Lua files"
+}
 ghu.s = core.makeSettingWrapper(s)
 -- hack for ghureload to ensure startup is only loaded once
 _G.ghuStartupRan = false
@@ -213,10 +219,14 @@ local function updateRepo(repoString)
         end
         if checksum ~= localManifest.files[path] then
             print("..." .. path)
+            local urlPath = path
+            if ghu.s.minified.get() then
+                urlPath = urlPath:gsub("%.lua", ".min.lua")
+            end
             if path == "startup.lua" then
-                core.download(baseURL .. path, ghu.p.root .. path)
+                core.download(baseURL .. urlPath, ghu.p.root .. path)
             else
-                core.download(baseURL .. path, basePath .. path)
+                core.download(baseURL .. urlPath, basePath .. path)
             end
             downloadCount = downloadCount + 1
         end
