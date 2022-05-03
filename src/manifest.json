@@ -5,7 +5,7 @@
     "apis/ghu.lua": "d698c2a86b7d27a7c48c7426c897b68bfb676193286270b34c721ca571864bbf",
     "apis/am/core.lua": "8890d790e787db0d52495d61d2e19eac1e582320f6f7b74c1c83db26058f46de",
     "programs/ghuconf.lua": "0cac67b96ff49cbcd6d3c0beebfd86e16e1ca00e3c40faaea4048a6ad5a43155",
-    "programs/ghuupdate.lua": "36f952978e74724b242921f7ec7ccce9140436d83279f578511060ed50cb38a1",
+    "programs/ghuupdate.lua": "589635e9cb072e1e89ce8f8f70836e793d5cca8bceadd99639ca943f4bb09a65",
     "programs/ghureload.lua": "3c02e26cc5a6587ac43978c8d4c551cec6ef08037e6e906bd3b3aa84df54cd94"
   },
   "dependencies": []
