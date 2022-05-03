@@ -1,7 +1,17 @@
-local expect = require("cc.expect").expect
+local v = require("cc.expect")
+
+local ghBase = "https://raw.githubusercontent.com/"
+local coreRepo = "AngellusMortis/cc-updater"
+local ref = "v2"
+local baseUrl = ghBase .. coreRepo .. "/" .. ref .. "/src/"
+local requiredFiles = {
+    "apis/am/core.lua",
+    "apis/ghu.lua",
+    "programs/ghuupdate.lua"
+}
 
 local function getAndCheck(url)
-    expect(1, url, "string")
+    v.expect(1, url, "string")
 
     url = url .. "?ts=" .. os.time(os.date("!*t"))
     local r = http.get(url)
@@ -16,8 +26,8 @@ local function getAndCheck(url)
 end
 
 local function download(url, path)
-    expect(1, url, "string")
-    expect(2, path, "string")
+    v.expect(1, url, "string")
+    v.expect(2, path, "string")
 
     if (fs.exists(path)) then
         fs.delete(path)
@@ -33,22 +43,19 @@ local function main(root)
     if root == nil then
         root = "/"
     end
-    expect(1, root, "string")
+    v.expect(1, root, "string")
 
-    download(
-        "https://raw.githubusercontent.com/AngellusMortis/cc-updater/v1/src/apis/ghu.lua",
-        root .. "ghu/core/apis/ghu.lua"
-    )
-    download(
-        "https://raw.githubusercontent.com/AngellusMortis/cc-updater/v1/src/programs/ghuupdate.lua",
-        root .. "ghu/core/programs/ghuupdate.lua"
-    )
+    local basePath = root .. "ghu/"
+    for _, file in ipairs(requiredFiles) do
+        download(
+            baseUrl .. file,
+            basePath .. "core/" .. file
+        )
+    end
 
-    settings.set("ghu.base", root .. "ghu/")
+    settings.set("ghu.base", basePath)
     settings.save()
-    shell.run(root .. "ghu/core/programs/ghuupdate.lua")
-    local ghu = require(root .. "ghu/core/apis/ghu")
-    ghu.initShellPaths()
+    shell.run(basePath .. "core/programs/ghuupdate.lua")
     print("Install complete")
 end
 

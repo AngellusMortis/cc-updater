@@ -19,6 +19,6 @@ print(string.format(
 if count > 1 then
     local oldAutoUpdate = ghu.s.autoUpdate.get()
     ghu.s.autoUpdate.set(false)
-    shell.run("ghureload")
+    shell.run(settings.get("ghu.base") .. "core/programs/ghureload")
     ghu.s.autoUpdate.set(oldAutoUpdate)
 end

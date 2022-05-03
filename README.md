@@ -12,6 +12,12 @@ Run the following command in your computer:
 wget run https://raw.githubusercontent.com/AngellusMortis/cc-updater/master/install.lua
 ```
 
+Since ComputerCraft computers have size limits for computers, by default, all Lua files that are downloaded are minified. If you would like to change this behavior global for all files, you can run
+
+```bash
+ghuconf set minified false
+```
+
 ## Adding Repos
 
 You can add a repo for your computer using the `ghuconf` command. Format for adding new repos is `ghuconf add extraRepos {username}/{repo}:/src`.
@@ -19,12 +25,14 @@ You can add a repo for your computer using the `ghuconf` command. Format for add
 For example, if you want to add my [work in progress rendering library](https://github.com/AngellusMortis/am-cc/tree/master/render):
 
 ```bash
-ghuconf add extraRepos AngellusMortis/am-cc:/render
+ghuconf add extraRepos AngellusMortis/am-cc:/render default
 ```
 
 You can optionally add `@{ref}` after the repo to pull a specific git ref (branch, tag or sha).
 
 You can find Github repos using `cc-updater` at by [searching Github](https://github.com/search?q=topic%3Acc-updater-package)
+
+The last parameter is how you want to handle minification. `default` uses the global `ghu.minified` setting, `true` forces files to be minified and `false` forces them to not be minified.
 
 ## Making New Repos
 
@@ -66,10 +74,11 @@ Helper program to manage cc-updater settings. You can do the same thing with `se
 #### All Settings
 
 * `base` - the root folder for cc-updater. Changing the value is not supported/tested
-* `autoUpdate` - Automatically run `ghuupdate` in `startup.lua`
-* `autoRun` - Automatically run any `.lua` files in `/autoruns` for each cc-updater repo
+* `autoUpdate` - Automatically run `ghuupdate` in `startup.lua`. Defaults to `true`
+* `autoRun` - Automatically run any `.lua` files in `/autoruns` for each cc-updater repo. Defaults to `true`
 * `coreRepo` - The Github ref for the `cc-updater` repo. Changing the value is not supported/tested
 * `extraRepos` - A list of subscribed Github repos
+* `minified` - Downloads files minified or not. Defaults to `true`
 
 #### Examples
 
@@ -78,7 +87,8 @@ Helper program to manage cc-updater settings. You can do the same thing with `se
 * `ghuconf help autoUpdate` will print out the help for the `ghu.autoUpdate` setting
 * `ghuconf set autoRun false` will disable automatically running `/autoruns`
 * `ghuconf set autoUpdate default` will revert auto update to the default value (true)
-* `ghuconf add extraRepos example/test:/src` will subscribe to Github repo "example/test" with the path "/src"
+* `ghuconf add extraRepos example/test:/src default` will subscribe to Github repo "example/test" with the path "/src" with default minified Lua setting (use global)
+* `ghuconf add extraRepos example/test:/src false` will subscribe to Github repo "example/test" with the path "/src" without minified Lua files
 * `ghuconf remove extraRepos example/test:/src` will unsubscribe to Github repo "example/test" (does not delete files)
 
 ## Note About Caching
