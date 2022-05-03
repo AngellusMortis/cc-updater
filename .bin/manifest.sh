@@ -6,6 +6,8 @@ if [[ -f deps.json ]]; then
 fi
 
 LUA_FILES=$(find . -iname "*.lua" ! -iname '*.min.lua')
+echo "All files:"
+echo $LUA_FILES
 echo "Generating manifest.json..."
 echo $LUA_FILES \
     | sed 's/.\///' \
