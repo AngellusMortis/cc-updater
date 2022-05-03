@@ -6,7 +6,12 @@ local function printValue(name)
     if name == "extraRepos" then
         print(#value .. " Extra Repo(s):")
         for i, repo in ipairs(value) do
-            print(i .. ": " .. repo)
+            local minSetting = ghu.getMinSetting(repo)
+            local minString = ""
+            if minSetting ~= nil then
+                minString = minSetting and " (min)" or " (full)"
+            end
+            print(string.format("%d:%s %s", i, minString, repo))
         end
     else
         print(value)
@@ -35,7 +40,7 @@ local function printUsage(op)
 end
 
 
-local function main(op, settingName, value)
+local function main(op, settingName, value, extra)
     if op == nil then
         printUsage()
         return
@@ -92,7 +97,25 @@ local function main(op, settingName, value)
 
         local settingValue = ghu.s[settingName].get()
         if op == "add" then
-            settingValue[#settingValue+1] = value
+            local exists = false
+            for i=#settingValue, 1, -1 do
+                if settingValue[i] == value then
+                    exists = true
+                    break
+                end
+            end
+            if not exists then
+                settingValue[#settingValue+1] = value
+            end
+
+            if extra ~= nil then
+                if extra == "default" then
+                    settings.unset(ghu.getMinSettingName(value))
+                else
+                    extra = core.strBool(extra)
+                    ghu.setMinSetting(value, extra)
+                end
+            end
         else
             for i=#settingValue, 1, -1 do
                 if settingValue[i] == value then
@@ -106,4 +129,4 @@ local function main(op, settingName, value)
     end
 end
 
-main(arg[1], arg[2], arg[3])
+main(arg[1], arg[2], arg[3], arg[4])

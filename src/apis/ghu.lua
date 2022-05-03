@@ -174,18 +174,45 @@ end
 ---Write manifest for downloaded repo on disk
 ---@param repoString string repo/module
 ---@param manifest table manifest table
-local function writeManifest(repoString, manifest)
+---@param minified? boolean
+local function writeManifest(repoString, manifest, minified)
     v.expect(1, repoString, "string")
+    v.expect(2, manifest, "table")
+    v.expect(3, minified, "boolean", "nil")
+    if minified == nil then
+        minified = ghu.s.minified.get()
+    end
 
     local manifestPath = getManifestPath(repoString)
     if fs.exists(manifestPath) then
         fs.delete(manifestPath)
     end
 
-    manifest.minified = ghu.s.minified.get()
+    manifest.minified = minified
     local f = fs.open(manifestPath, "w")
     f.write(textutils.serialize(manifest))
     f.close()
+end
+
+---Gets repo specific minified setting
+---@param repoString string repo/module
+---@return string
+local function getMinSettingName(repoString)
+    return ghu.s.minified.name .. string.format(".%s", repoString)
+end
+
+---Gets repo specific minified setting
+---@param repoString string repo/module
+---@return boolean?
+local function getMinSetting(repoString)
+    return settings.get(getMinSettingName(repoString))
+end
+
+---Sets repo specific minified setting
+---@param repoString string repo/module
+---@param value boolean
+local function setMinSetting(repoString, value)
+    return settings.set(getMinSettingName(repoString), value)
 end
 
 ---Downloads and updates a repo
@@ -218,11 +245,15 @@ local function updateRepo(repoString)
     end
 
     local minified = localManifest.minified
+    local minSetting = getMinSetting(repoString)
+    if minSetting == nil then
+        minSetting = ghu.s.minified.get()
+    end
     for path, checksum in pairs(manifest.files) do
         if path == "startup.lua" and not isCore then
             error("Only coreRepo can set startup.lua")
         end
-        local minSetting = ghu.s.minified.get()
+
         if checksum ~= localManifest.files[path] or minified ~= minSetting then
             print("..." .. path)
             local urlPath = path
@@ -239,7 +270,7 @@ local function updateRepo(repoString)
     end
     print("..total: " .. tostring(downloadCount))
 
-    writeManifest(repoString, manifest)
+    writeManifest(repoString, manifest, minSetting)
     return downloadCount, repoCount
 end
 
@@ -404,6 +435,9 @@ ghu.addShellPath = addShellPath
 ghu.initShellPaths = initShellPaths
 ghu.addModulePath = addModulePath
 ghu.initModulePaths = initModulePaths
+ghu.getMinSettingName = getMinSettingName
+ghu.getMinSetting = getMinSetting
+ghu.setMinSetting = setMinSetting
 
 initShellPaths()
 initModulePaths()

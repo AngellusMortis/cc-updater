@@ -57,14 +57,27 @@ local compValue = function(shell, text, previous)
     elseif previous[3] == "base" then
         return completion.dir(shell, text)
     end
-    return completion.choice(shell, text, previous, choices, false)
+    local addSpace = false
+    if previous[2] == "add" and previous[3] == "extraRepos" then
+        addSpace = true
+    end
+    return completion.choice(shell, text, previous, choices, addSpace)
+end
+
+local compExtra = function(shell, text, previous)
+    if previous[2] ~= "add" or previous[3] ~= "extraRepos" then
+        return nil
+    end
+
+    return completion.choice(shell, text, previous, {"default", "true", "false"}, false)
 end
 shell.setCompletionFunction(
     shellBase .. "programs/ghuconf.lua",
     completion.build(
         { completion.choice, { "list", "help ", "get ", "set ", "add ", "remove " }, false},
         compSettings,
-        compValue
+        compValue,
+        compExtra
     )
 )
 
