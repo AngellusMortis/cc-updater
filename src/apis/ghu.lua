@@ -124,6 +124,10 @@ local function parseRepo(repoString)
         repo = parts[1]
         ref = parts[2]
     end
+
+    if base:sub(#base, #base) ~= "/" then
+        base = base .. "/"
+    end
     return getRepoPath(isCore and "core" or repo, base), repo, ref, base
 end
 
