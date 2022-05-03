@@ -19,7 +19,9 @@ echo "Minifying Lua files..."
 echo $(pwd)
 ls -la
 for file in $LUA_FILES; do
+    file=${file:2}
+    file="$PWD/$file"
     minFile=${file%.lua}.min.lua
     echo "$file -> $minFile"
-    luamin -f $file # > $minFile
+    luamin -f "$file" # > $minFile
 done
