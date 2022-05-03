@@ -45,13 +45,14 @@ jobs:
 
     - name: Commit Changes
       run: |-
-        git config user.name github-actions
-        git config user.email github-actions@github.com
+        if [[ -n $(git diff --name-only) ]]; then
+          git config user.name github-actions
+          git config user.email github-actions@github.com
 
-        for module in $MODULES; do
-          git add ${GITHUB_WORKSPACE}/${module}/manifest.json || true
-          git add *.min.lua || true
-        done
+          for module in $MODULES; do
+            git add ${GITHUB_WORKSPACE}/${module}/manifest.json
+          done
 
-        git commit -m "Generate new manifest"
-        git push
+          git commit -m "Generate new manifest"
+          git push
+        end
