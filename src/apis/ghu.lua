@@ -165,6 +165,9 @@ local function readManifest(repoString)
     end
     f.close()
 
+    if manifest.minified == nil then
+        manifest.minified = false
+    end
     return manifest
 end
 
@@ -179,6 +182,7 @@ local function writeManifest(repoString, manifest)
         fs.delete(manifestPath)
     end
 
+    manifest.minified = ghu.s.minified.get()
     local f = fs.open(manifestPath, "w")
     f.write(textutils.serialize(manifest))
     f.close()
@@ -213,14 +217,16 @@ local function updateRepo(repoString)
         print("..enddeps:" .. repo .. base)
     end
 
+    local minified = localManifest.minified
     for path, checksum in pairs(manifest.files) do
         if path == "startup.lua" and not isCore then
             error("Only coreRepo can set startup.lua")
         end
-        if checksum ~= localManifest.files[path] then
+        local minSetting = ghu.s.minified.get()
+        if checksum ~= localManifest.files[path] or minified ~= minSetting then
             print("..." .. path)
             local urlPath = path
-            if ghu.s.minified.get() then
+            if minSetting then
                 urlPath = urlPath:gsub("%.lua", ".min.lua")
             end
             if path == "startup.lua" then
