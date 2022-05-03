@@ -15,6 +15,6 @@ echo $LUA_FILES \
     | jq --argjson dependencies $DEPS '{files: ., dependencies: $dependencies}' > manifest.json
 echo "Minifying Lua files..."
 for file in $LUA_FILES; do
-    echo "$file"
+    echo "$file -> ${file%.lua}.min.lua"
     luamin -f $file > ${file%.lua}.min.lua
 done
