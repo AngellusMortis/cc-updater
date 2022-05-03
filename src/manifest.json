@@ -1,12 +1,12 @@
 {
   "files": {
-    "apis/ghu.lua": "8b75fb32ad407926df7374ab2ccb7cc156a3aa79154dbb3b9d9908eb483bc1d9",
-    "./apis/am/core.lua": "8890d790e787db0d52495d61d2e19eac1e582320f6f7b74c1c83db26058f46de",
+    "init.lua": "cbd9e586faec0526d51ecb87f6a660ac98fd7bf207128d997c25b1411efd6503",
     "./startup.lua": "e5a716ac69b7ffd01dceace22e6216a8cacb0cb9e43e17fd676f1669711ae379",
-    "./programs/ghuupdate.lua": "5b1e873696617fe3f6dbc23ecffae235ab4fae7e3c0f7102d9953a71b6961f42",
+    "./apis/ghu.lua": "8b75fb32ad407926df7374ab2ccb7cc156a3aa79154dbb3b9d9908eb483bc1d9",
+    "./apis/am/core.lua": "8890d790e787db0d52495d61d2e19eac1e582320f6f7b74c1c83db26058f46de",
     "./programs/ghuconf.lua": "b3b1acd35cf35489ff6d06d0d0cb18befbe8b2c5f8de41c197afef19ac3b8bc3",
-    "./programs/ghureload.lua": "3c02e26cc5a6587ac43978c8d4c551cec6ef08037e6e906bd3b3aa84df54cd94",
-    "./init.lua": "cbd9e586faec0526d51ecb87f6a660ac98fd7bf207128d997c25b1411efd6503"
+    "./programs/ghuupdate.lua": "5b1e873696617fe3f6dbc23ecffae235ab4fae7e3c0f7102d9953a71b6961f42",
+    "./programs/ghureload.lua": "3c02e26cc5a6587ac43978c8d4c551cec6ef08037e6e906bd3b3aa84df54cd94"
   },
   "dependencies": []
 }
