@@ -55,4 +55,4 @@ jobs:
 
           git commit -m "Generate new manifest"
           git push
-        end
+        fi
