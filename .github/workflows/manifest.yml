@@ -29,6 +29,8 @@ jobs:
 
     - name: Install npm
       uses: actions/setup-node@v3
+      with:
+        node-version: 16
 
     - name: Install luamin
       run: sudo npm install -g luamin
