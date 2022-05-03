@@ -14,7 +14,7 @@ local boolMap = {
 }
 
 ---Parses string into boolean
----@param str string to parse
+---@param str string|boolean to parse
 ---@return boolean
 local function strBool(str)
     v.expect(1, str, "string", "boolean")
@@ -31,8 +31,8 @@ local function strBool(str)
 end
 
 ---Splits a string
----@param str string to split
----@param sep Seperater
+---@param str string Value to split
+---@param sep? string Seperater defaults to `,`
 ---@return table
 local function split(str, sep)
     v.expect(1, str, "string")
@@ -42,15 +42,15 @@ local function split(str, sep)
         sep = ","
     end
     local t={}
-    for str in string.gmatch(str, "([^"..sep.."]+)") do
-        table.insert(t, str)
+    for part in string.gmatch(str, "([^"..sep.."]+)") do
+        table.insert(t, part)
     end
     return t
 end
 
 ---Merge a table into another
----@param dest Table to keep (values added and overwritten)
----@param src Table to pull values from
+---@param dest table Table to keep (values added and overwritten)
+---@param src table Table to pull values from
 ---@return table
 local function merge(dest, src)
     for key, value in pairs(src) do
@@ -60,22 +60,22 @@ local function merge(dest, src)
 end
 
 ---Concatenate two tables
----@param left Table to keep and output
----@param right Table to take values from
+---@param left table Table to keep and output
+---@param right table Table to take values from
 ---@return table
 local function concat(left, right)
     v.expect(1, left, "table")
     v.expect(2, right, "table")
 
-    for _, v in ipairs(right) do
-        table.insert(left, v)
+    for _, value in ipairs(right) do
+        table.insert(left, value)
     end
     return left
 end
 
 ---Copy for lua tables
 ---@generic T
----@param orig table/value to copy
+---@param orig T table/value to copy
 ---@return T
 local function copy(orig)
     local orig_type = type(orig)
@@ -95,8 +95,8 @@ local function copy(orig)
 end
 
 ---Performs HTTP GET and checks reponse
----@param url URL to call
----@return table
+---@param url string URL to call
+---@return table Response
 local function getAndCheck(url)
     v.expect(1, url, "string")
 
@@ -104,6 +104,7 @@ local function getAndCheck(url)
     local r = http.get(url)
     if r == nil then
         error(string.format("Bad HTTP Response: %s", url))
+        return
     end
     local rc, _ = r.getResponseCode()
     if rc ~= 200 then
@@ -113,8 +114,8 @@ local function getAndCheck(url)
 end
 
 ---Downloads a File to disk
----@param url URL to call
----@param path Path to write file to
+---@param url string URL to call
+---@param path string Path to write file to
 local function download(url, path)
     v.expect(1, url, "string")
     v.expect(2, path, "string")
@@ -130,8 +131,8 @@ local function download(url, path)
 end
 
 ---Gets JSON from URL
----@param url URL to call
----@return table
+---@param url string URL to call
+---@return table JSON Response
 local function getJSON(url)
     v.expect(1, url, "string")
 
@@ -156,8 +157,9 @@ end
 ---* a `terminate` event will return `"terminate", {}`
 ---* a `timer` event will return `"timer", {id}`
 ---* a `monitor_touch` event will return `"monitor_touch", {id, x, y}`
----@param url URL to call
----@return string, Any
+---@param event string Event name
+---@param ...? any
+---@return string, table Event and args table
 local function cleanEventArgs(event, ...)
     local args = { ... }
     if type(event) == "table" then
@@ -192,7 +194,7 @@ end
 ---```
 ---{mySetting={name="test.mySetting", default=true, type="boolean", description="Setting description"}}
 ---```
----@param s Setting definition
+---@param s table Setting definition
 ---@return table
 local function makeSettingWrapper(s)
     for key, setting in pairs(s) do

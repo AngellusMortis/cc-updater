@@ -56,21 +56,23 @@ _G.ghuStartupRan = false
 
 
 ---Gets disk path for repo
----@param repo repo/module
----@param base relative path in repo
+---@param repo string repo/module
+---@param base string? relative path in repo
 ---@return string
 local function getRepoPath(repo, base)
     v.expect(1, repo, "string")
-
-    v.expect(1, repo, "string")
+    v.expect(2, base, "string", "nil")
 
     local path = ghu.p.ext .. repo
     if repo == "core" then
         path = ghu.p.core
         base = ""
     end
+    if base == nil or base == "" then
+        base = "/src"
+    end
 
-    local base = base:gsub("/src", "")
+    base = base:gsub("/src", "")
     if base:sub(1, 1) == "/" then
         base = base:sub(2)
     end
@@ -90,8 +92,8 @@ end
 ---
 ---If `ref` is left out, it defaults to `master`
 ---If `base` is left out, it defaults to `/src`
----@param repoString Github repo string
----@return repo, ref, base
+---@param repoString string Github repo string
+---@return string, string, string, string
 local function parseRepo(repoString)
     v.expect(1, repoString, "string")
 
@@ -125,7 +127,7 @@ local function parseRepo(repoString)
 end
 
 ---Get manifest path for downloaded repo
----@param repoString repo/module
+---@param repoString string repo/module
 ---@return string
 local function getManifestPath(repoString)
     v.expect(1, repoString, "string")
@@ -135,7 +137,7 @@ local function getManifestPath(repoString)
 end
 
 ---Get manifest for downloaded repo on disk
----@param repoString repo/module
+---@param repoString string repo/module
 ---@return table
 local function readManifest(repoString)
     v.expect(1, repoString, "string")
@@ -146,7 +148,7 @@ local function readManifest(repoString)
     end
 
     local f = fs.open(manifestPath, "r")
-    manifest = textutils.unserialize(f.readAll())
+    local manifest = textutils.unserialize(f.readAll())
     if manifest.files == nil then
         manifest = {files=manifest}
     end
@@ -156,8 +158,8 @@ local function readManifest(repoString)
 end
 
 ---Write manifest for downloaded repo on disk
----@param repoString repo/module
----@param manifest manifest table
+---@param repoString string repo/module
+---@param manifest table manifest table
 local function writeManifest(repoString, manifest)
     v.expect(1, repoString, "string")
 
@@ -172,8 +174,11 @@ local function writeManifest(repoString, manifest)
 end
 
 ---Downloads and updates a repo
+---@param repoString string repo/module
+---@return number, number
 local function updateRepo(repoString)
     v.expect(1, repoString, "string")
+
     local isCore = repoString == "core"
     local basePath, repo, ref, base = parseRepo(repoString)
     print("." .. repo)
@@ -218,14 +223,18 @@ local function updateRepo(repoString)
 end
 
 ---Get dependencies for downloaded repo
----@param repoString repo/module
----@param manifest Optional manifest to use
+---@param repoString string repo/module
+---@param manifest? table Optional manifest to use
 ---@return table
 function getDeps(repoString, manifest)
     v.expect(1, repoString, "string")
     v.expect(2, manifest, "table", "nil")
     if manifest == nil then
         manifest = readManifest(repoString)
+    end
+    if manifest == nil then
+        error("Could not load manifest")
+        return
     end
 
     deps = {}
@@ -242,6 +251,7 @@ function getDeps(repoString, manifest)
 end
 
 ---Gets autorun programs for subscribed repos
+---@return table
 local function getAutoruns()
     local autoruns = {}
     for i, repoString in ipairs(ghu.s.extraRepos.get()) do
@@ -257,7 +267,7 @@ end
 ---Helper function to add a search path to `shell.path` for repo
 ---
 ---Follows the same structure as the base CC paths
----@param repoString repo/module
+---@param repoString string repo/module
 local function addShellPath(repoString)
     v.expect(1, repoString, "string")
 
@@ -321,7 +331,7 @@ end
 ---Add Module path
 --
 -- Helper function to add a search path to package.path for repos
----@param repoString repo/module
+---@param repoString string repo/module
 local function addModulePath(repoString)
     v.expect(1, repoString, "string")
 
