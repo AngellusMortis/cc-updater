@@ -153,8 +153,8 @@ end
 ---it will be returned as a single value
 ---
 ---Example:
----* a `terminate` event will return `"terminate"`
----* a `timer` event will return `"timer", id`
+---* a `terminate` event will return `"terminate", {}`
+---* a `timer` event will return `"timer", {id}`
 ---* a `monitor_touch` event will return `"monitor_touch", {id, x, y}`
 ---@param url URL to call
 ---@return string, Any
@@ -165,13 +165,6 @@ local function cleanEventArgs(event, ...)
         event = args[1]
         table.remove(args, 1)
     end
-
-    if #args == 1 then
-        args = args[1]
-    elseif #args == 0 then
-        args = nil
-    end
-
     return event, args
 end
 
