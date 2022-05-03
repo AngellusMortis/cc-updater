@@ -1,1 +1,1 @@
-Error: no such file. (``)
+local a=require(settings.get("ghu.base").."core/apis/ghu")print("Updating repos...")local b,c=a.updateRepo("core")for d,e in pairs(a.s.extraRepos.get())do local f,g=a.updateRepo(e)b=b+f;c=c+g end;print(string.format("Updated %s file%s from %s repo%s",b,b~=1 and"s"or"",c,c~=1 and"s"or""))
