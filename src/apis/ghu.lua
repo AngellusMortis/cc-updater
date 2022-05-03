@@ -95,6 +95,11 @@ end
 local function parseRepo(repoString)
     v.expect(1, repoString, "string")
 
+    local isCore = repoString == "core"
+    if isCore then
+        repoString = ghu.s.coreRepo.get()
+    end
+
     local parts = core.split(repoString, ":")
     local repo = parts[1]
     local base = "/"
@@ -116,7 +121,7 @@ local function parseRepo(repoString)
         repo = parts[1]
         ref = parts[2]
     end
-    return getRepoPath(repo, base), repo, ref, base
+    return getRepoPath(isCore and "core" or repo, base), repo, ref, base
 end
 
 ---Get manifest path for downloaded repo
@@ -167,13 +172,9 @@ local function writeManifest(repoString, manifest)
 end
 
 ---Downloads and updates a repo
-local function updateRepo(repoString, isCore)
+local function updateRepo(repoString)
     v.expect(1, repoString, "string")
-    v.expect(2, isCore, "boolean", "nil")
-    if isCore == nil then
-        isCore = false
-    end
-
+    local isCore = repoString == "core"
     local basePath, repo, ref, base = parseRepo(repoString)
     print("." .. repo)
     print("..ref:" .. ref .. ".path:" .. base)
@@ -181,7 +182,7 @@ local function updateRepo(repoString, isCore)
 
     local baseURL = "https://raw.githubusercontent.com/" .. repo .. "/" .. ref .. base .. "/"
     local manifest = core.getJSON(baseURL .. "manifest.json")
-    local localManifest = readManifest(isCore and "core" or repoString)
+    local localManifest = readManifest(repoString)
 
     local downloadCount = 0
     local repoCount = 1
@@ -212,7 +213,7 @@ local function updateRepo(repoString, isCore)
     end
     print("..total: " .. tostring(downloadCount))
 
-    writeManifest(isCore and "core" or repoString, manifest)
+    writeManifest(repoString, manifest)
     return downloadCount, repoCount
 end
 
