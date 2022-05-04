@@ -54,6 +54,7 @@ local function main(root)
     end
 
     settings.set("ghu.base", basePath)
+    settings.set("ghu.coreRepo", coreRepo .. "@" .. ref)
     settings.save()
     if shell.run(basePath .. "core/programs/ghuupdate.lua") then
         print("Install complete")

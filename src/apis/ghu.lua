@@ -40,7 +40,7 @@ s.autoRun = {
 }
 s.coreRepo = {
     name = "ghu.coreRepo",
-    default = "AngellusMortis/cc-updater@v1:/src",
+    default = "AngellusMortis/cc-updater@v2",
     type = "string",
     description = "Core repo for cc-updater. Recommended not to change."
 }
