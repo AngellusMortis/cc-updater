@@ -27,8 +27,8 @@ jobs:
         majorTag=v$(bash ./.bin/getMajor.sh)
 
         git fetch --tags
-        git tag -d $majorTag
-        git push --delete origin $majorTag
+        git tag -d $majorTag || true
+        git push --delete origin $majorTag || true
         git tag $majorTag
         git tag v$(cat ./version.txt)
 
