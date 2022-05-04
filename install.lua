@@ -55,8 +55,11 @@ local function main(root)
 
     settings.set("ghu.base", basePath)
     settings.save()
-    shell.run(basePath .. "core/programs/ghuupdate.lua")
-    print("Install complete")
+    if shell.run(basePath .. "core/programs/ghuupdate.lua") then
+        print("Install complete")
+    else
+        error("Error installing")
+    end
 end
 
 local root = arg[1]
