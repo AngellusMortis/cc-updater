@@ -4,6 +4,18 @@ Lightweight dependency manager for CC: Tweaked.
 
 The goal is to make an easier way to distribute code to multiple computers quickly and consistently. This is not designed to be a full-blown package manager (maybe someday), but it does allow you to update modules from Github as well as automatically pull dependencies for them (no conflict resolution).
 
+## Why "Another Package Manager"
+
+There are so many package managers for ComputerCraft that no one uses them. You do not need to use this one, I made it for me and if I am the only one that uses, that is fine.
+
+But why _I think_ you should use this:
+
+* 100% open source, fork it, copy it, do whatever you want with it.
+* No external backends. It is completely built on top of Github and Github Actions so no servers with code you cannot see.
+  * (NOTE: I only ever use Github, if you want another source code site backend such as GitLab, make an issue/PR and we can chat!)
+* Completely built on top of Git so there is versioning, version pinning, etc.
+* Automatic minification of Lua files so you can have readable source files but still download compact files for your computers
+
 ## Install
 
 Run the following command in your computer:
