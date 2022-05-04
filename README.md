@@ -57,6 +57,12 @@ The folder structure largely mimics the folder structure from the CraftOS `rom` 
 
 * `/deps.json`: A JSON array of other Github repos that this one depends on. Will automatically be injected into the `manifest.json` when it is generated.
 
+## Versioning
+
+There are a couple of Github Actions workflows to help you manage Git tags and versions in the template repo. It is designed to follow a [2 digit semver](https://semver.org/). In other words, you can run the "Bump Minor" workflow to increase the minor version, indicating that the changes are safe and there are no breaking API changes and anyone using that major version tag will automatically get the update next time they run `ghuupdate`. Then there is the "Bump Major" workflow to cut a new major version which people will _not_ automatically get unless they are using `master` as a ref.
+
+The initial version of the template repo is 0.1.
+
 ## Provided Programs
 
 ### ghuupdate
