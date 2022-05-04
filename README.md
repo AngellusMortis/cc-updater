@@ -35,10 +35,10 @@ ghuconf set minified false
 
 You can add a repo for your computer using the `ghuconf` command. Format for adding new repos is `ghuconf add extraRepos {username}/{repo}:/src`.
 
-For example, if you want to add my [work in progress rendering library](https://github.com/AngellusMortis/am-cc/tree/master/render):
+For example, if you want to add my [rendering library](https://github.com/AngellusMortis/cc-render):
 
 ```bash
-ghuconf add extraRepos AngellusMortis/am-cc:/render default
+ghuconf add extraRepos AngellusMortis/cc-render@v1 default
 ```
 
 You can optionally add `@{ref}` after the repo to pull a specific git ref (branch, tag or sha).
