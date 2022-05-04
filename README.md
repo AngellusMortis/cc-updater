@@ -14,6 +14,7 @@ But why _I think_ you should use this:
 * No external backends. It is completely built on top of Github and Github Actions so no servers with code you cannot see.
   * (NOTE: I only ever use Github, if you want another source code site backend such as GitLab, make an issue/PR and we can chat!)
 * Completely built on top of Git so there is versioning, version pinning, etc.
+* Small! Only 5.82KB when fully minified (~3 files)
 * Automatic minification of Lua files so you can have readable source files but still download compact files for your computers
 * Easy to integrate, just copy and tweak the workflows and scripts from the [template repo](https://github.com/AngellusMortis/cc-updater-template) and you should be good to go!
 
