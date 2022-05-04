@@ -61,11 +61,12 @@ The folder structure largely mimics the folder structure from the CraftOS `rom` 
 * `/apis`: `.lua` files added to the `/apis` folder will be available to import as Lua modules. Since there is no persistent way to add module paths, you will have to add the following to a Lua file to load them by their relative name:
 
     ```lua
-        local ghu = require(settings.get("ghu.base") .. "core/apis/ghu")
-        ghu.initModulePaths()
+        -- ComputerCraft does not have a way to persist module loaders
+        -- So importing the core updater library will automatically initialize the module loaders if needed
+        require(settings.get("ghu.base") .. "core/apis/ghu")
 
-        -- example to load UI library from WIP rendering lib above (AngellusMortis/am-cc:/render):
-        local ui = require("uiLib")
+        -- example to load UI library from WIP rendering lib above (AngellusMortis/cc-render):
+        local ui = require("am.ui")
     ```
 
 * `/deps.json`: A JSON array of other Github repos that this one depends on. Will automatically be injected into the `manifest.json` when it is generated.
