@@ -1,4 +1,4 @@
-name: Promote Version
+name: Bump Minor
 
 on:
   workflow_dispatch:
