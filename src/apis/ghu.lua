@@ -227,7 +227,7 @@ local function updateRepo(repoString)
     print("..ref:" .. ref .. ".path:" .. base)
     print("..dest:" .. basePath)
 
-    local baseURL = "https://raw.githubusercontent.com/" .. repo .. "/" .. ref .. base .. "/"
+    local baseURL = "https://raw.githubusercontent.com/" .. repo .. "/" .. ref .. base
     local manifest = core.getJSON(baseURL .. "manifest.json")
     local localManifest = readManifest(repoString)
 
