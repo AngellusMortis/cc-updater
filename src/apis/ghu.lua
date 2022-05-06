@@ -306,11 +306,27 @@ end
 ---@return table
 local function getAutoruns()
     local autoruns = {}
+    local loadedModules = {["core"]=true}
     for i, repoString in ipairs(ghu.s.extraRepos.get()) do
-        local path = parseRepo(repoString)
-        local autorunPath = path .. "autorun/"
-        autoruns = core.concat(autoruns, fs.find(autorunPath .. "*.lua"))
+        if loadedModules[repoString] == nil then
+            require("am.log").debug(repoString)
+            local path = parseRepo(repoString)
+            local autorunPath = path .. "autorun/"
+            autoruns = core.concat(autoruns, fs.find(autorunPath .. "*.lua"))
+            loadedModules[repoString] = true
+        end
+
+        local deps = getDeps(repoString)
+        for _, dep in ipairs(deps) do
+            if loadedModules[dep] == nil then
+                local path = parseRepo(dep)
+                local autorunPath = path .. "autorun/"
+                autoruns = core.concat(autoruns, fs.find(autorunPath .. "*.lua"))
+                loadedModules[dep] = true
+            end
+        end
     end
+
     return autoruns
 end
 
@@ -375,7 +391,10 @@ local function initShellPaths(force)
 
         local deps = getDeps(repoString)
         for _, dep in ipairs(deps) do
-            addShellPath(dep)
+            if loadedModules[dep] == nil then
+                addShellPath(dep)
+                loadedModules[dep] = true
+            end
         end
     end
 end
@@ -417,7 +436,10 @@ local function initModulePaths(force)
 
         local deps = getDeps(repoString)
         for _, dep in ipairs(deps) do
-            addModulePath(dep)
+            if loadedModules[dep] == nil then
+                addModulePath(dep)
+                loadedModules[dep] = true
+            end
         end
     end
     modulesInitialized = true
