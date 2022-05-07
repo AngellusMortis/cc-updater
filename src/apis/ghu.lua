@@ -309,7 +309,6 @@ local function getAutoruns()
     local loadedModules = {["core"]=true}
     for i, repoString in ipairs(ghu.s.extraRepos.get()) do
         if loadedModules[repoString] == nil then
-            require("am.log").debug(repoString)
             local path = parseRepo(repoString)
             local autorunPath = path .. "autorun/"
             autoruns = core.concat(autoruns, fs.find(autorunPath .. "*.lua"))
