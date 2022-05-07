@@ -76,17 +76,23 @@ end
 ---Copy for lua tables
 ---@generic T
 ---@param orig T table/value to copy
+---@param meta? boolean
 ---@return T
-local function copy(orig)
+local function copy(orig, meta)
+    if meta == nil then
+        meta = true
+    end
     local orig_type = type(orig)
     local new
 
     if orig_type == 'table' then
         new = {}
         for orig_key, orig_value in next, orig, nil do
-            new[copy(orig_key)] = copy(orig_value)
+            new[copy(orig_key)] = copy(orig_value, meta)
         end
-        setmetatable(new, copy(getmetatable(orig)))
+        if meta then
+            setmetatable(new, copy(getmetatable(orig)))
+        end
     else -- number, string, boolean, etc
         new = orig
     end
