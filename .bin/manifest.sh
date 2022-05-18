@@ -17,6 +17,9 @@ echo $LUA_FILES \
 echo "Minifying Lua files..."
 for file in $LUA_FILES; do
     minFile=${file%.lua}.min.lua
+    minFile="min/$minFile"
+    baseDir=$(dirname $minFile)
+    mkdir -p $baseDir
     echo "$file -> $minFile"
     cat "$file" | luamin -c > $minFile
 done

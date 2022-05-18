@@ -259,6 +259,7 @@ local function updateRepo(repoString)
             local urlPath = path
             if minSetting then
                 urlPath = urlPath:gsub("%.lua", ".min.lua")
+                urlPath = string.format("min/%s", urlPath)
             end
             if path == "startup.lua" then
                 core.download(baseURL .. urlPath, ghu.p.root .. path)

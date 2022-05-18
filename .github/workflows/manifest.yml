@@ -51,7 +51,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         for module in $MODULES; do
           git add ${GITHUB_WORKSPACE}/${module}/manifest.json
-          git add ${GITHUB_WORKSPACE}/${module}/*.min.lua
+          git add ${GITHUB_WORKSPACE}/${module}/min/*.min.lua
         done
 
         if [[ -n $(git diff --name-only --cached) ]]; then

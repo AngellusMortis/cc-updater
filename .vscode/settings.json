@@ -1,6 +1,6 @@
 {
     "Lua.diagnostics.severity": {
-        "redefined-local": "Warning"
+        "redefined-local": "Warning",
     },
     "Lua.diagnostics.globals": [
         "printError",
@@ -35,7 +35,17 @@
         "_CC_DEFAULT_SETTINGS",
         "_HOST",
         "_VERSION",
-        "_"
+        "_",
+        "colony"
     ],
-    "Lua.runtime.version": "Lua 5.1",
+    "Lua.runtime.version": "Lua 5.2",
+    "Lua.workspace.ignoreDir": [
+        ".vscode",
+        "*.min.lua"
+    ],
+    "Lua.IntelliSense.traceLocalSet": true,
+    "Lua.IntelliSense.traceReturn": true,
+    "Lua.IntelliSense.traceBeSetted": true,
+    "Lua.IntelliSense.traceFieldInject": true,
+    "Lua.diagnostics.libraryFiles": "Enable"
 }
