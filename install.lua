@@ -2,7 +2,7 @@ local v = require("cc.expect")
 
 local ghBase = "https://raw.githubusercontent.com/"
 local coreRepo = "AngellusMortis/cc-updater"
-local ref = "v2"
+local ref = "v3"
 local baseUrl = ghBase .. coreRepo .. "/" .. ref .. "/src/"
 local requiredFiles = {
     "apis/am/core.lua",
