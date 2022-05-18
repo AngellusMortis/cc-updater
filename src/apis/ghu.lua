@@ -257,7 +257,7 @@ local function updateRepo(repoString)
         if checksum ~= localManifest.files[path] or minified ~= minSetting then
             print("..." .. path)
             local urlPath = path
-            if minSetting then
+            if minSetting and urlPath:sub(#urlPath - 3) == ".lua" then
                 urlPath = urlPath:gsub("%.lua", ".min.lua")
                 urlPath = string.format("min/%s", urlPath)
             end

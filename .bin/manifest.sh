@@ -6,14 +6,18 @@ if [[ -f deps.json ]]; then
 fi
 
 LUA_FILES=$(find . -iname "*.lua" ! -iname '*.min.lua' | sed 's/.\///')
-echo "All files:"
-echo "$LUA_FILES"
+MANFIEST_FILES="$(find . -iwholename './help/*.txt' | sed 's/.\///')
+$LUA_FILES"
+echo "All manfiest files:"
+echo "$MANFIEST_FILES"
+echo ""
 echo "Generating manifest.json..."
-echo $LUA_FILES \
+echo $MANFIEST_FILES \
     | xargs sha256sum \
     | awk '{ print "{\""$2"\": \""$1"\"}" }' \
     | jq -s add \
     | jq --argjson dependencies $DEPS '{files: ., dependencies: $dependencies}' > manifest.json
+echo ""
 echo "Minifying Lua files..."
 for file in $LUA_FILES; do
     minFile=${file%.lua}.min.lua
