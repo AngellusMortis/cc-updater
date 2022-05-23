@@ -211,7 +211,11 @@ local function makeSettingWrapper(s)
             if value == setting.default then
                 value = copy(setting.default)
             end
-            settings.set(setting.name, value)
+            if value == nil then
+                settings.unset(setting.name)
+            else
+                settings.set(setting.name, value)
+            end
             settings.save()
         end
         s[key] = setting
