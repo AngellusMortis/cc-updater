@@ -4,7 +4,7 @@
     "help/ghuupdate.txt": "dcfd2977cd87f0d4803d9597f92b6d89e881921e567da59c958597aaab81996b",
     "help/ghuconf.txt": "02255ec69d8a5bb01738d00dea334cac0c642e0ad6e9a4ec3532935fade22608",
     "init.lua": "4d427ddc75812b676afc7738ee1b9ddc3b0464059485ac2cee60ae6439910206",
-    "apis/am/core.lua": "feba526790bbc0350e67c35472c35e56b92ca3bc8b3d2bac869eefdce0576dcb",
+    "apis/am/core.lua": "3f426e25345d43a900ddd73b1b40541e51283bdb02e3dfd6a8ea805d64d17c46",
     "apis/ghu.lua": "1c189b67197cc936a61ea4c53669e59cdb8989af929e85d744393855f96f8b1f",
     "startup.lua": "e5a716ac69b7ffd01dceace22e6216a8cacb0cb9e43e17fd676f1669711ae379",
     "programs/ghuupdate.lua": "589635e9cb072e1e89ce8f8f70836e793d5cca8bceadd99639ca943f4bb09a65",
