@@ -1,5 +1,8 @@
 local v = require("cc.expect")
 
+---@type table<string, table<string, any>>
+_G.AM_DATA = {}
+
 local boolMap = {
     ["true"] = true,
     ["yes"] = true,
@@ -224,6 +227,63 @@ local function makeSettingWrapper(s)
     return s
 end
 
+---@param name string
+local function getDataPath(name)
+    return string.format("/.%s.data", name)
+end
+
+---Makes a data wrapper to access serialized data
+---
+--- Works exactly like makeSettingWrapper, but allows you to store
+--- data in a seperate path.
+---@param s table Setting definition
+---@param name string
+---@return table
+local function makeDataWrapper(s, name)
+    local dataPath = getDataPath(name)
+    if _G.AM_DATA[name] == nil and fs.exists(dataPath) then
+        local f = fs.open(dataPath, "r")
+        _G.AM_DATA[name] = textutils.unserialize(f.readAll())
+        f.close()
+    end
+
+    for key, data in pairs(s) do
+        data.get = function()
+            if _G.AM_DATA[name][data.name] ~= nil then
+                return _G.AM_DATA[name][data.name]
+            end
+            if data.default ~= nil then
+                return copy(data.default)
+            end
+            return nil
+        end
+
+        data.set = function(value)
+            local setDefault = false
+            if value == data.default or value == nil then
+                _G.AM_DATA[name][data.name] = nil
+                setDefault = true
+            else
+                if data.type ~= nil then
+                    v.expect(1, value, data.type)
+                end
+
+                _G.AM_DATA[name][data.name] = value
+            end
+
+            local f = fs.open(dataPath, "w")
+            f.write(textutils.serialize(_G.AM_DATA[name]))
+            f.close()
+
+            if setDefault then
+                _G.AM_DATA[name][data.name] = copy(data.default)
+            end
+        end
+        s[key] = data
+    end
+    return s
+end
+
 local core = {}
 core.strBool = strBool
 core.split = split
@@ -235,4 +295,5 @@ core.download = download
 core.getJSON = getJSON
 core.cleanEventArgs = cleanEventArgs
 core.makeSettingWrapper = makeSettingWrapper
+core.makeDataWrapper = makeDataWrapper
 return core
