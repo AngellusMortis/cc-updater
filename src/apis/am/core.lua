@@ -247,6 +247,10 @@ local function makeDataWrapper(s, name)
         f.close()
     end
 
+    if _G.AM_DATA[name] == nil then
+        _G.AM_DATA[name] = {}
+    end
+
     for key, data in pairs(s) do
         data.get = function()
             if _G.AM_DATA[name][data.name] ~= nil then
