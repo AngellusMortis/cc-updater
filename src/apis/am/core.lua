@@ -257,8 +257,7 @@ local function makeDataWrapper(s, name)
                 return _G.AM_DATA[name][data.name]
             end
             if data.default ~= nil then
-                _G.AM_DATA[name][data.name] = copy(data.default)
-                return _G.AM_DATA[name][data.name]
+                return copy(data.default)
             end
             return nil
         end
