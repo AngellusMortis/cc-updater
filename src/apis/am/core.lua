@@ -243,8 +243,9 @@ local function makeDataWrapper(s, name)
     local dataPath = getDataPath(name)
     if _G.AM_DATA[name] == nil and fs.exists(dataPath) then
         local f = fs.open(dataPath, "r")
-        _G.AM_DATA[name] = textutils.unserialize(f.readAll())
+        local seralized = f.readAll()
         f.close()
+        _G.AM_DATA[name] = textutils.unserialize(seralized)
     end
 
     if _G.AM_DATA[name] == nil then
@@ -275,8 +276,9 @@ local function makeDataWrapper(s, name)
                 _G.AM_DATA[name][data.name] = value
             end
 
+            local seralized = textutils.serialize(_G.AM_DATA[name])
             local f = fs.open(dataPath, "w")
-            f.write(textutils.serialize(_G.AM_DATA[name]))
+            f.write(seralized)
             f.close()
 
             if setDefault then
